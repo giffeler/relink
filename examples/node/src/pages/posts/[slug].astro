@@ -1,0 +1,7 @@
+---
+import { getEmDashEntry } from 'emdash';
+import { PortableText } from 'emdash/ui';
+const { entry } = await getEmDashEntry('posts', Astro.params.slug ?? '');
+if (!entry) return Astro.redirect('/404');
+---
+<!doctype html><html lang="en"><head><title>{entry.data.title}</title></head><body><main><h1>{entry.data.title}</h1><PortableText value={entry.data.content} /><p><a href={entry.data.website}>Configured URL field</a></p></main></body></html>

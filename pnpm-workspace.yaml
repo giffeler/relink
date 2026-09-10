@@ -1,0 +1,19 @@
+packages:
+  - .
+  - examples/*
+allowBuilds:
+  esbuild: true
+  sharp: true
+  workerd: true
+minimumReleaseAgeExclude:
+  - "@emdash-cms/admin@0.37.0"
+  - "@emdash-cms/auth@0.37.0"
+  - "@emdash-cms/blocks@0.37.0"
+  - "@emdash-cms/gutenberg-to-portable-text@0.37.0"
+  - "@emdash-cms/plugin-types@0.3.1"
+  - "@emdash-cms/registry-client@0.5.0"
+  - "@emdash-cms/registry-verification@0.3.0"
+  - emdash@0.37.0
+  - "@emdash-cms/cloudflare@0.37.0"
+overrides:
+  kysely: 0.29.5

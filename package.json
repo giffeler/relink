@@ -1,0 +1,101 @@
+{
+  "name": "emdash-plugin-relink",
+  "version": "0.1.0",
+  "description": "Keep EmDash links alive with verified archives and scheduled reviews.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/giffeler/relink.git"
+  },
+  "engines": {
+    "node": ">=22.16"
+  },
+  "packageManager": "pnpm@11.19.0",
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "docs"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/plugin.d.ts",
+      "import": "./dist/plugin.js"
+    },
+    "./astro": {
+      "types": "./dist/integration.d.ts",
+      "import": "./dist/integration.js"
+    },
+    "./middleware": {
+      "types": "./dist/middleware.d.ts",
+      "import": "./dist/middleware.js"
+    },
+    "./admin": {
+      "types": "./dist/admin/index.d.ts",
+      "import": "./dist/admin/index.js"
+    },
+    "./styles.css": "./dist/admin/styles.css",
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
+    "test:browser": "playwright test",
+    "test:package": "node scripts/test-package.mjs"
+  },
+  "peerDependencies": {
+    "@cloudflare/kumo": "^2.6.0",
+    "@emdash-cms/admin": "0.37.0",
+    "@lingui/core": "^5.0.0",
+    "@lingui/react": "^5.0.0",
+    "astro": "^7.3.1",
+    "emdash": "0.37.0",
+    "react": "^19.2.0"
+  },
+  "dependencies": {
+    "parse5": "8.0.1",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@astrojs/cloudflare": "14.3.1",
+    "@astrojs/node": "11.1.5",
+    "@astrojs/react": "6.0.5",
+    "@axe-core/playwright": "4.11.1",
+    "@cloudflare/kumo": "^2.6.0",
+    "@emdash-cms/admin": "0.37.0",
+    "@emdash-cms/cloudflare": "0.37.0",
+    "@eslint/js": "10.0.1",
+    "@lingui/core": "^5.9.5",
+    "@lingui/react": "^5.9.5",
+    "@playwright/test": "1.63.0",
+    "@testing-library/react": "16.3.3",
+    "@types/node": "22.20.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "astro": "^7.3.1",
+    "emdash": "0.37.0",
+    "esbuild": "0.28.1",
+    "eslint": "10.10.0",
+    "jsdom": "30.0.1",
+    "kysely": "0.29.5",
+    "miniflare": "4.20260730.0",
+    "prettier": "3.6.2",
+    "react": "^19.2.8",
+    "react-dom": "19.2.8",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.0",
+    "vitest": "5.0.0"
+  }
+}

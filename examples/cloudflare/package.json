@@ -1,0 +1,25 @@
+{
+  "name": "relink-example-cloudflare",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build"
+  },
+  "dependencies": {
+    "emdash-plugin-relink": "workspace:*",
+    "emdash": "0.37.0",
+    "@emdash-cms/cloudflare": "0.37.0",
+    "astro": "7.3.1",
+    "@astrojs/cloudflare": "14.3.1",
+    "@astrojs/react": "6.0.5",
+    "@lingui/core": "5.9.5",
+    "@lingui/react": "5.9.5",
+    "@cloudflare/kumo": "2.6.0",
+    "@emdash-cms/admin": "0.37.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "lowlight": "3.3.0",
+    "highlight.js": "11.11.2"
+  }
+}

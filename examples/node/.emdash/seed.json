@@ -1,0 +1,58 @@
+{
+  "version": "1",
+  "settings": { "siteName": "Relink example" },
+  "collections": [
+    {
+      "slug": "posts",
+      "label": "Posts",
+      "labelSingular": "Post",
+      "urlPattern": "/posts/{slug}",
+      "supports": ["drafts", "revisions"],
+      "fields": [
+        {
+          "slug": "title",
+          "label": "Title",
+          "type": "string",
+          "required": true
+        },
+        { "slug": "content", "label": "Content", "type": "portableText" },
+        { "slug": "website", "label": "Website", "type": "url" }
+      ]
+    }
+  ],
+  "content": {
+    "posts": [
+      {
+        "id": "example",
+        "slug": "example",
+        "status": "published",
+        "data": {
+          "title": "Links in published content",
+          "website": "https://example.com/",
+          "content": [
+            {
+              "_type": "block",
+              "_key": "paragraph",
+              "style": "normal",
+              "markDefs": [
+                {
+                  "_type": "link",
+                  "_key": "source",
+                  "href": "https://example.com/"
+                }
+              ],
+              "children": [
+                {
+                  "_type": "span",
+                  "_key": "text",
+                  "marks": ["source"],
+                  "text": "An external source"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
