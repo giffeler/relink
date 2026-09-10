@@ -33,7 +33,7 @@ await writeFile(
 // An empty workspace boundary prevents accidental use of the source checkout.
 await writeFile(
   resolve(directory, "pnpm-workspace.yaml"),
-  "packages:\n  - .\nallowBuilds:\n  esbuild: true\n  sharp: true\noverrides:\n  kysely: 0.29.5\n",
+  "packages:\n  - .\nallowBuilds:\n  esbuild: true\n  sharp: true\noverrides:\n  kysely: 0.29.5\n  'sharp@<0.35.4': 0.35.4\n  'undici@>=7.0.0 <7.29.0': 7.29.0\n",
 );
 await cp(
   resolve(root, "tests/fixtures/local-auth.ts"),
