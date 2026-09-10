@@ -19,3 +19,4 @@ overrides:
   kysely: 0.29.5
   "sharp@<0.35.4": 0.35.4
   "undici@>=7.0.0 <7.29.0": 7.29.0
+  smol-toml: 1.7.1

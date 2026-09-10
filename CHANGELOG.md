@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1 — 2026-09-10
+
+- Support explicit content route aliases, including trailing-slash and legacy article routes, without duplicating link occurrences.
+- Revalidate publication and source links when rendering through an alias.
+- Update the development and isolated-install TOML dependency to the patched release.
+
 ## 0.2.0 — 2026-09-10
 
 - Introduce the Relink Noncommercial License 1.0 for otherwise unlicensed additions and changes, with free noncommercial use and separate commercial agreements through gekko mbH.

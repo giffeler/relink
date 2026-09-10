@@ -5,6 +5,7 @@ import { RelinkEngine } from "./core/engine.js";
 import { effectiveDestination, listQuerySchema } from "./core/api.js";
 import type { AdminSnapshot } from "./core/api.js";
 import { extractOccurrences } from "./core/extract.js";
+import { indexedPaths } from "./core/paths.js";
 import { commandInputSchema, optionsSchema } from "./core/schema.js";
 import type { CommandInput, ResolvedOptions } from "./core/schema.js";
 import { RelinkStore, storageDefinition } from "./core/storage.js";
@@ -158,9 +159,21 @@ export async function pageProjection(
   const settings = await store.settings();
   if (!context.content) return { rules: [] };
   if (!settings.enabled) return { rules: [] };
-  const occurrences = await store.occurrences.all({
-    where: { pagePath: pathname },
-  });
+  const candidates = await Promise.all(
+    options.sources.map(async (source) => {
+      const pages = await Promise.all(
+        indexedPaths(pathname, source).map((pagePath) =>
+          store.occurrences.all({
+            where: { pagePath, collection: source.collection },
+          }),
+        ),
+      );
+      return pages.flat();
+    }),
+  );
+  const occurrences = [
+    ...new Map(candidates.flat().map((entry) => [entry.id, entry])).values(),
+  ];
   const verified = new Set<string>();
   const documents = new Set<string>();
   for (const occurrence of occurrences) {
@@ -189,7 +202,8 @@ export async function pageProjection(
       "projection",
     );
     for (const entry of live)
-      if (entry.pagePath === pathname) verified.add(entry.id);
+      if (indexedPaths(pathname, source).includes(entry.pagePath))
+        verified.add(entry.id);
   }
   const rules: Array<[string, string]> = [];
   for (const occurrence of occurrences) {
@@ -220,7 +234,7 @@ export function createPlugin(rawOptions: unknown): ResolvedPlugin {
   };
   return definePlugin({
     id: "relink",
-    version: "0.2.0",
+    version: "0.2.1",
     capabilities: ["content:read", "network:request:unrestricted"],
     storage: storageDefinition,
     admin: adminConfiguration,

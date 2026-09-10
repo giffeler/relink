@@ -25,7 +25,7 @@ const pkg = JSON.parse(
   await readFile(resolve(directory, "package.json"), "utf8"),
 );
 pkg.dependencies["emdash-plugin-relink"] =
-  `file:${resolve(artifacts, "emdash-plugin-relink-0.2.0.tgz")}`;
+  `file:${resolve(artifacts, "emdash-plugin-relink-0.2.1.tgz")}`;
 await writeFile(
   resolve(directory, "package.json"),
   `${JSON.stringify(pkg, null, 2)}\n`,
@@ -33,7 +33,7 @@ await writeFile(
 // An empty workspace boundary prevents accidental use of the source checkout.
 await writeFile(
   resolve(directory, "pnpm-workspace.yaml"),
-  "packages:\n  - .\nallowBuilds:\n  esbuild: true\n  sharp: true\noverrides:\n  kysely: 0.29.5\n  'sharp@<0.35.4': 0.35.4\n  'undici@>=7.0.0 <7.29.0': 7.29.0\n",
+  "packages:\n  - .\nallowBuilds:\n  esbuild: true\n  sharp: true\noverrides:\n  smol-toml: 1.7.1\n  kysely: 0.29.5\n  'sharp@<0.35.4': 0.35.4\n  'undici@>=7.0.0 <7.29.0': 7.29.0\n",
 );
 await cp(
   resolve(root, "tests/fixtures/local-auth.ts"),

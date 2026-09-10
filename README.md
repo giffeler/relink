@@ -4,7 +4,7 @@ External link maintenance for EmDash. Relink inventories published links, checks
 
 **Compatibility:** EmDash 0.37.0, Astro 7.3.1, React 19 and Lingui 5. English and German interfaces; automatic or forced text direction. This is a native plugin, installed through your site's configuration; it is not a sandbox marketplace bundle.
 
-**Licensing:** [Relink Noncommercial License 1.0](LICENSE). Noncommercial use is free; commercial use of material governed by the new license requires a separate agreement with **gekko mbH** at [info2504@gekko.de](mailto:info2504@gekko.de). This is source-available software, not OSI-approved open source. **The previously released 0.1.0 code retains its MIT permissions, including commercial use.** Version 0.2.0 records a licensing transition and adds no new link-maintenance functionality. See [licensing and commercial use](docs/licensing.md) for the exact scope and the rights needed for external contributions.
+**Licensing:** [Relink Noncommercial License 1.0](LICENSE). Noncommercial use is free; commercial use of material governed by the new license requires a separate agreement with **gekko mbH** at [info2504@gekko.de](mailto:info2504@gekko.de). This is source-available software, not OSI-approved open source. **The previously released 0.1.0 code retains its MIT permissions, including commercial use.** Version 0.2.1 records a licensing transition and adds no new link-maintenance functionality. See [licensing and commercial use](docs/licensing.md) for the exact scope and the rights needed for external contributions.
 
 ## Install
 
@@ -16,10 +16,10 @@ pnpm check
 pnpm pack --pack-destination work/artifacts
 ```
 
-In your EmDash site, install the resulting `emdash-plugin-relink-0.2.0.tgz`. Existing EmDash installations should already have the peer dependencies. Keep `@emdash-cms/admin` at 0.37.0 and Lingui on major version 5.
+In your EmDash site, install the resulting `emdash-plugin-relink-0.2.1.tgz`. Existing EmDash installations should already have the peer dependencies. Keep `@emdash-cms/admin` at 0.37.0 and Lingui on major version 5.
 
 ```sh
-pnpm add /path/to/emdash-plugin-relink-0.2.0.tgz
+pnpm add /path/to/emdash-plugin-relink-0.2.1.tgz
 ```
 
 ```ts

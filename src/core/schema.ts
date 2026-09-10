@@ -177,6 +177,7 @@ export const collectionSourceSchema = z.object({
   portableTextFields: z.array(z.string()).default(["content"]),
   urlFields: z.array(z.string()).default([]),
   path: z.string().startsWith("/").default("/{slug}"),
+  pathAliases: z.array(z.string().startsWith("/")).max(20).default([]),
 });
 export const optionsSchema = z.object({
   siteUrl: httpUrl,

@@ -250,36 +250,49 @@ describe("persistent link maintenance on Node SQLite", () => {
     );
     expect(link.replacement).toBeNull();
   });
-  it("exposes replacements only for the current published occurrence", async () => {
-    const { store } = await fixture();
-    const items = [document()];
-    const content = contentAccess(items);
-    await new RelinkEngine({
-      store,
-      content,
-      transport: { fetch: async () => response() },
-      options,
-      clock: () => NOW,
-    }).tick();
-    const link = (await store.links.all())[0];
-    if (!link) throw new Error("Missing link");
-    link.replacement = archiveRule;
-    await store.links.put(link.id, link);
-    expect(
-      (await pageProjection(store, { content }, options, "/post-1")).rules,
-    ).toHaveLength(1);
-    const item = items[0];
-    if (!item) throw new Error("Missing item");
-    item.status = "draft";
-    expect(
-      (await pageProjection(store, { content }, options, "/post-1")).rules,
-    ).toHaveLength(0);
-    item.status = "published";
-    item.data = { website: "https://different.example" };
-    expect(
-      (await pageProjection(store, { content }, options, "/post-1")).rules,
-    ).toHaveLength(0);
-  });
+  it.each(["/post-1", "/posts/post-1", "/post-1/"])(
+    "exposes replacements only for the current published occurrence at %s",
+    async (pathname) => {
+      const { store } = await fixture();
+      const items = [document()];
+      const content = contentAccess(items);
+      const aliasOptions = {
+        ...options,
+        sources: options.sources.map((source) => ({
+          ...source,
+          pathAliases: ["/posts/{slug}", "/{slug}/"],
+        })),
+      };
+      await new RelinkEngine({
+        store,
+        content,
+        transport: { fetch: async () => response() },
+        options,
+        clock: () => NOW,
+      }).tick();
+      const link = (await store.links.all())[0];
+      if (!link) throw new Error("Missing link");
+      link.replacement = archiveRule;
+      await store.links.put(link.id, link);
+      expect(
+        (await pageProjection(store, { content }, aliasOptions, pathname))
+          .rules,
+      ).toHaveLength(1);
+      const item = items[0];
+      if (!item) throw new Error("Missing item");
+      item.status = "draft";
+      expect(
+        (await pageProjection(store, { content }, aliasOptions, pathname))
+          .rules,
+      ).toHaveLength(0);
+      item.status = "published";
+      item.data = { website: "https://different.example" };
+      expect(
+        (await pageProjection(store, { content }, aliasOptions, pathname))
+          .rules,
+      ).toHaveLength(0);
+    },
+  );
   it("fails closed on corrupt persisted records", async () => {
     const { store, context } = await fixture();
     await context.storage["links"]?.put("bad", { schemaVersion: 100 });
