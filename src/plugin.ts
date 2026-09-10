@@ -106,8 +106,6 @@ export async function adminSnapshot(
       );
     })
     .sort((a, b) => a.nextCheckAt - b.nextCheckAt || a.id.localeCompare(b.id));
-  const links = matches.slice(query.offset, query.offset + query.limit);
-  const ids = new Set(links.map((link) => link.id));
   const matchingIds = new Set(matches.map((link) => link.id));
   const matchingHistory =
     query.view === "history"
@@ -119,6 +117,12 @@ export async function adminSnapshot(
     query.offset,
     query.offset + query.limit,
   );
+  const historyIds = new Set(history.map((entry) => entry.linkId));
+  const links =
+    query.view === "history"
+      ? matches.filter((link) => historyIds.has(link.id))
+      : matches.slice(query.offset, query.offset + query.limit);
+  const ids = new Set(links.map((link) => link.id));
   return {
     links,
     occurrences: allOccurrences.filter((entry) => ids.has(entry.linkId)),
@@ -234,7 +238,7 @@ export function createPlugin(rawOptions: unknown): ResolvedPlugin {
   };
   return definePlugin({
     id: "relink",
-    version: "0.2.1",
+    version: "0.2.2",
     capabilities: ["content:read", "network:request:unrestricted"],
     storage: storageDefinition,
     admin: adminConfiguration,

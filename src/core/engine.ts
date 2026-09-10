@@ -109,6 +109,7 @@ export class RelinkEngine {
       schemaVersion: 1,
       id,
       linkId: link.id,
+      originalUrl: link.url,
       at: this.clock(),
       event,
       result: link.lastCheck,

@@ -25,7 +25,7 @@ const pkg = JSON.parse(
   await readFile(resolve(directory, "package.json"), "utf8"),
 );
 pkg.dependencies["emdash-plugin-relink"] =
-  `file:${resolve(artifacts, "emdash-plugin-relink-0.2.1.tgz")}`;
+  `file:${resolve(artifacts, "emdash-plugin-relink-0.2.2.tgz")}`;
 await writeFile(
   resolve(directory, "package.json"),
   `${JSON.stringify(pkg, null, 2)}\n`,

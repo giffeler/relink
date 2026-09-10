@@ -93,30 +93,59 @@ function Status({ link, t }: { link: LinkRecord; t: Translate }): ReactNode {
 }
 function History({
   entries,
+  links,
   t,
   date,
+  onSelect,
 }: {
   entries: HistoryEntry[];
+  links: LinkRecord[];
   t: Translate;
   date: (at: number | null) => string;
+  onSelect?: (id: string) => void;
 }): ReactNode {
+  const linkUrls = new Map(links.map((link) => [link.id, link.url]));
   return (
     <ol className="rl-history">
-      {entries.map((entry) => (
-        <li key={entry.id}>
-          <time>{date(entry.at)}</time>
-          <strong>{t(entry.event)}</strong>
-          {entry.result && (
-            <span>
-              {t(entry.result.kind)}
-              {entry.result.kind !== "healthy"
-                ? ` · ${t(entry.result.reason)}`
-                : ""}
-            </span>
-          )}
-          {entry.destination && <Url value={entry.destination} />}
-        </li>
-      ))}
+      {entries.map((entry) => {
+        const original = entry.originalUrl ?? linkUrls.get(entry.linkId);
+        return (
+          <li key={entry.id}>
+            <time>{date(entry.at)}</time>
+            <strong>{t(entry.event)}</strong>
+            {original ? (
+              onSelect && linkUrls.has(entry.linkId) ? (
+                <button
+                  className="rl-link"
+                  type="button"
+                  onClick={() => onSelect(entry.linkId)}
+                >
+                  <Url value={original} />
+                </button>
+              ) : (
+                <Url value={original} />
+              )
+            ) : (
+              <span>
+                {t("linkId")}: <Url value={entry.linkId} />
+              </span>
+            )}
+            {entry.result && (
+              <span>
+                {t(entry.result.kind)}
+                {entry.result.kind !== "healthy"
+                  ? ` · ${t(entry.result.reason)}`
+                  : ""}
+              </span>
+            )}
+            {entry.destination && (
+              <span>
+                {t("destination")}: <Url value={entry.destination} />
+              </span>
+            )}
+          </li>
+        );
+      })}
     </ol>
   );
 }
@@ -483,7 +512,11 @@ export function RelinkApp({
                   </label>
                 </fieldset>
                 <div className="rl-list-heading">
-                  <span>{t("linkCount", { count: snapshot.total })}</span>
+                  <span>
+                    {t(tab === "history" ? "historyCount" : "linkCount", {
+                      count: snapshot.total,
+                    })}
+                  </span>
                   <Button
                     disabled={busy}
                     onClick={() => {
@@ -496,7 +529,15 @@ export function RelinkApp({
               </>
             )}
             {tab === "history" ? (
-              <History entries={snapshot.history} t={t} date={date} />
+              <History
+                entries={snapshot.history}
+                links={snapshot.links}
+                t={t}
+                date={date}
+                onSelect={(id) => {
+                  void openDetail(id);
+                }}
+              />
             ) : (
               <div
                 className="rl-table-wrap"
@@ -765,7 +806,12 @@ export function RelinkApp({
                 </p>
               )}
               <h3>{t("history")}</h3>
-              <History entries={detail.history} t={t} date={date} />
+              <History
+                entries={detail.history}
+                links={[detail.link]}
+                t={t}
+                date={date}
+              />
             </>
           )}
         </Dialog>

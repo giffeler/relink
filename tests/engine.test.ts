@@ -4,7 +4,7 @@ import { LinkChecker } from "../src/core/http.js";
 import { DAY, defaultSettings } from "../src/core/schema.js";
 import type { ReplacementRule } from "../src/core/schema.js";
 import { RelinkStore } from "../src/core/storage.js";
-import { pageProjection } from "../src/plugin.js";
+import { adminSnapshot, pageProjection } from "../src/plugin.js";
 import {
   contentAccess,
   createTestStore,
@@ -34,6 +34,41 @@ const archiveRule: ReplacementRule = {
 };
 
 describe("persistent link maintenance on Node SQLite", () => {
+  it("returns the links belonging to each history page, including legacy events without URLs", async () => {
+    const { store } = await fixture();
+    const first = newLink("a", "https://first.example/", NOW);
+    const second = newLink("b", "https://second.example/", NOW + DAY);
+    await store.links.put(first.id, first);
+    await store.links.put(second.id, second);
+    for (const [id, linkId, at] of [
+      ["old", "a", NOW],
+      ["new", "b", NOW + 1],
+    ] as const) {
+      await store.history.put(id, {
+        schemaVersion: 1,
+        id,
+        linkId,
+        at,
+        event: "checked",
+        result: null,
+        destination: null,
+        replacement: null,
+      });
+    }
+    for (const [offset, expected] of [
+      [0, second],
+      [1, first],
+    ] as const) {
+      const snapshot = await adminSnapshot(store, {
+        request: new Request(
+          `https://site.example/?view=history&limit=1&offset=${offset}`,
+        ),
+      });
+      expect(snapshot.total).toBe(2);
+      expect(snapshot.history[0]?.linkId).toBe(expected.id);
+      expect(snapshot.links.map((link) => link.url)).toEqual([expected.url]);
+    }
+  });
   it("scans published content only, shares identical targets, resumes batches, and sweeps removed occurrences", async () => {
     const { store } = await fixture();
     const items = Array.from({ length: 12 }, (_, index) =>

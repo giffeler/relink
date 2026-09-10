@@ -1,6 +1,6 @@
 # Installation and operation
 
-Relink 0.2.1 targets **EmDash 0.37.0**. It requires a server-rendered Astro site. `relink()` registers the native plugin and its admin extensions; `relinkAstro()` registers output middleware. Both registrations are required. Include `react()` so EmDash's admin can hydrate. Do not place native plugins in EmDash's sandboxed plugin list.
+Relink 0.2.2 targets **EmDash 0.37.0**. It requires a server-rendered Astro site. `relink()` registers the native plugin and its admin extensions; `relinkAstro()` registers output middleware. Both registrations are required. Include `react()` so EmDash's admin can hydrate. Do not place native plugins in EmDash's sandboxed plugin list.
 
 Read the [licensing terms](licensing.md) before use. Material governed by the Relink Noncommercial License requires a separate agreement for commercial use; existing MIT rights in the 0.1.0 baseline remain unaffected.
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.2 — 2026-09-10
+
+- Show the original URL for every history event, with a keyboard-accessible action to open link details.
+- Correct history pagination so legacy events receive the matching target metadata. Preserve original URLs in new history records without requiring a migration.
+- Label replacement destinations separately and localize event counts in English and German.
+- Prepare package metadata and installation guidance for the first npm release.
+
 ## 0.2.1 — 2026-09-10
 
 - Support explicit content route aliases, including trailing-slash and legacy article routes, without duplicating link occurrences.

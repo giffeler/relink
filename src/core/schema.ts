@@ -153,6 +153,7 @@ export const historySchema = z.object({
   schemaVersion: z.literal(1),
   id: z.string(),
   linkId: z.string(),
+  originalUrl: httpUrl.optional(),
   at: timestamp,
   event: z.enum([
     "checked",

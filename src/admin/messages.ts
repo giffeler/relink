@@ -98,6 +98,10 @@ export const en = {
   openRelink: "Open Relink",
   editorHelp: "Published links only. Save and publish changes before scanning.",
   checked: "Link checked",
+  linkId: "Link ID",
+  historyCount: [
+    ["count", "plural", { one: ["#", " event"], other: ["#", " events"] }],
+  ],
   "archive-applied": "Archive applied",
   "grokipedia-applied": "Grokipedia applied",
   "original-restored": "Original restored",
@@ -235,6 +239,14 @@ export const de = {
   editorHelp:
     "Nur veröffentlichte Links. Änderungen vor der Prüfung speichern und veröffentlichen.",
   checked: "Link geprüft",
+  linkId: "Link-ID",
+  historyCount: [
+    [
+      "count",
+      "plural",
+      { one: ["#", " Ereignis"], other: ["#", " Ereignisse"] },
+    ],
+  ],
   "archive-applied": "Archiv übernommen",
   "grokipedia-applied": "Grokipedia übernommen",
   "original-restored": "Original wiederhergestellt",

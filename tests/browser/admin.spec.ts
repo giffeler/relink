@@ -9,7 +9,11 @@ import {
   PluginStorageRepository,
 } from "emdash";
 import type { Database } from "emdash";
-import { defaultSettings, linkSchema } from "../../src/core/schema.js";
+import {
+  defaultSettings,
+  historySchema,
+  linkSchema,
+} from "../../src/core/schema.js";
 import type { TextDirection } from "../../src/core/schema.js";
 import { resolve } from "node:path";
 
@@ -31,6 +35,62 @@ async function login(page: Page): Promise<void> {
   await expect(page.locator(".relink")).toBeVisible();
 }
 test.beforeEach(async () => settings("auto"));
+
+test("history identifies legacy check targets and opens details with keyboard focus", async ({
+  page,
+}) => {
+  const db = new Kysely<Database>({
+    dialect: createDialect({ url: resolve("work/package-site/data.db") }),
+  });
+  const history = new PluginStorageRepository(db, "relink", "history", []);
+  const id = "history-browser-regression";
+  try {
+    const raw = (
+      await new PluginStorageRepository(db, "relink", "links", []).query({
+        limit: 1,
+      })
+    ).items[0];
+    if (!raw) throw new Error("Missing browser link fixture");
+    const link = linkSchema.parse(raw.data);
+    await history.put(
+      id,
+      historySchema.parse({
+        schemaVersion: 1,
+        id,
+        linkId: link.id,
+        at: Date.now(),
+        event: "checked",
+        result: {
+          kind: "broken",
+          checkedAt: Date.now(),
+          finalUrl: "https://redirected.example/missing",
+          status: 404,
+          reason: "not-found",
+        },
+        destination: null,
+        replacement: null,
+      }),
+    );
+    await settings("rtl");
+    await login(page);
+    await page.getByRole("button", { name: "History", exact: true }).click();
+    const entry = page.locator(".relink > .rl-history li");
+    await expect(entry).toContainText("Link checked");
+    const target = entry.getByRole("button", { name: link.url, exact: true });
+    await expect(target).toBeVisible();
+    await expect(target.locator("bdi")).toHaveAttribute("dir", "ltr");
+    await target.focus();
+    await page.keyboard.press("Enter");
+    await expect(
+      page.getByRole("dialog", { name: "Link details" }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(target).toBeFocused();
+  } finally {
+    await history.delete(id);
+    await db.destroy();
+  }
+});
 
 test("native navigation, indexed occurrences, details, focus, CSV and accessibility", async ({
   page,

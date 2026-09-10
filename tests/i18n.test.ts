@@ -22,6 +22,10 @@ describe("language contracts", () => {
     expect(Object.values(de).every(Boolean)).toBe(true);
   });
   it("uses localized Lingui plural forms including zero", () => {
+    expect(translator("en").t("historyCount", { count: 1 })).toBe("1 event");
+    expect(translator("de").t("historyCount", { count: 2 })).toBe(
+      "2 Ereignisse",
+    );
     expect(translator("en-US").t("linkCount", { count: 1 })).toBe("1 link");
     expect(translator("de-AT").t("linkCount", { count: 1 })).toBe("1 Link");
     expect(translator("de-CH").t("linkCount", { count: 0 })).toBe("0 Links");
