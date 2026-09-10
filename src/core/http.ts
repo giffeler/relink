@@ -76,7 +76,7 @@ export class LinkChecker {
           redirect: "manual",
           signal: controller.signal,
           headers: {
-            "User-Agent": "Relink/0.1 (+https://github.com/giffeler/relink)",
+            "User-Agent": "Relink/0.2 (+https://github.com/giffeler/relink)",
             Accept:
               "text/html,application/xhtml+xml,application/pdf;q=0.9,*/*;q=0.8",
           },

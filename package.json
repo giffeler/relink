@@ -1,9 +1,9 @@
 {
   "name": "emdash-plugin-relink",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Keep EmDash links alive with verified archives and scheduled reviews.",
   "type": "module",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/giffeler/relink.git"
@@ -17,6 +17,9 @@
     "README.md",
     "CHANGELOG.md",
     "LICENSE",
+    "LICENSES",
+    "CONTRIBUTING.md",
+    "THIRD_PARTY_NOTICES.md",
     "docs"
   ],
   "exports": {

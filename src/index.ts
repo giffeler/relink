@@ -9,7 +9,7 @@ export function relink(
 ): PluginDescriptor<ResolvedOptions> {
   return {
     id: "relink",
-    version: "0.1.0",
+    version: "0.2.0",
     format: "native",
     entrypoint: "emdash-plugin-relink/runtime",
     options: optionsSchema.parse(options),

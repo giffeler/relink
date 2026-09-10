@@ -1,21 +1,167 @@
-MIT License
+RELINK NONCOMMERCIAL LICENSE 1.0
 
-Copyright (c) 2026 Relink contributors
+Copyright (c) 2026 gekko, Gesellschaft für Kommunikation und Kooperation mbH.
+All rights reserved except as expressly granted below or under a separate license.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Licensor: gekko, Gesellschaft für Kommunikation und Kooperation mbH ("gekko")
+Pappelallee 78/79, 10437 Berlin, Germany
+Registration number: HRB 141428 B
+Commercial licensing: info2504@gekko.de
+Website: https://gekko.de
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. Scope and existing rights
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+This license applies to Relink software, source code, compiled code, examples,
+and documentation that gekko identifies as subject to these terms (the
+"Software"), only to the extent gekko owns or controls the relevant rights.
+"You" means the person or legal entity exercising rights under this license.
+
+Relink 0.1.0, including repository history through commit
+cd88fcc95999976d3744b64331bbf657975328c2, was released under the MIT License.
+The applicable notice is retained in LICENSES/MIT-legacy.txt. These terms do
+not revoke, narrow, or replace rights already granted under MIT, including
+rights in material from that baseline that remains in later versions. They
+apply to otherwise unlicensed additions and changes made available under
+this license. Merely changing a license notice or version number does not
+make previously MIT-licensed code exclusively subject to these restrictions.
+
+Third-party components and separately identified material retain their own
+licenses. Those licenses prevail for that material. Nothing here restricts
+rights that you hold independently under another applicable license or law.
+
+2. Noncommercial permission
+
+Subject to compliance with these terms, gekko grants you a worldwide,
+nonexclusive, royalty-free copyright license to obtain, inspect, reproduce,
+install, execute, and modify the Software solely for Noncommercial Purposes.
+You may distribute it only as permitted by section 4. No commercial permission
+is granted by this section.
+
+"Noncommercial Purposes" are activities that are not directed toward, intended
+to obtain, or reasonably expected to support commercial advantage, revenue,
+remuneration, or the operation of a business, whether directly or indirectly,
+for you or another person or entity. Purely personal hobby use, private study,
+and independent noncommercial research qualify when they satisfy this test.
+
+3. Commercial use requires a separate agreement
+
+Use outside Noncommercial Purposes requires a separate commercial license
+expressly granted by an authorized representative of gekko before that use.
+This includes, without limitation:
+
+  a. Use in or in support of a business, including internal business operations,
+     commercial research or development, business websites, and marketing.
+  b. Use in paid work, consulting, agency services, or client projects, including
+     work supplied without a separate charge for the Software itself.
+  c. Sale, rental, paid distribution, commercial sublicensing, or inclusion in
+     a commercial product, subscription, bundle, or service.
+  d. Commercial hosting, managed services, software as a service, or offering
+     the Software's functionality as part of a revenue-generating service.
+  e. Use supporting advertising, affiliate income, sponsorship in exchange for
+     exposure or benefits, paid access, or sales of goods or services.
+
+A charitable, educational, governmental, or nonprofit status does not by
+itself make an otherwise commercial activity noncommercial. Making access
+free, operating without profit, or charging for surrounding services instead
+of the Software does not exempt a use that otherwise meets the commercial
+criteria. If a use has both commercial and noncommercial purposes, commercial
+permission is required for that use.
+
+Commercial permission must be recorded in a written or express electronic
+agreement with gekko that identifies the rights granted. A download, public
+repository, donation, unanswered request, or payment without an applicable
+license agreement does not by itself grant commercial rights. An applicable
+separate agreement governs the rights it expressly grants.
+
+4. Copies, modifications, and redistribution
+
+For Noncommercial Purposes, you may share original or modified copies without
+charging a fee or receiving other compensation for them, provided that:
+
+  a. You include this license and preserve applicable copyright, attribution,
+     third-party, and legacy-license notices with each copy.
+  b. You identify your modifications and do not present a modified version as
+     an official gekko release or imply gekko's endorsement.
+  c. You grant recipients the same noncommercial permissions in your own
+     modifications, subject to the same limitations, and preserve the
+     conditions on gekko's material without granting rights you do not hold.
+  d. The distribution and its intended use satisfy sections 2 and 3.
+
+These conditions do not relicense independent programs or third-party
+components. Every recipient obtains any permission in gekko's material from
+gekko under this license, rather than through a right to sublicense granted
+to you. You retain rights in your own original contributions, subject to any
+agreement you separately make with gekko.
+
+Rights to view or fork a public repository that are independently granted
+under the applicable hosting platform's terms are unaffected. Such platform
+permissions do not themselves grant additional commercial-use rights under
+this license.
+
+5. Rights reserved to gekko
+
+gekko may use and commercialize material it owns or controls, offer paid
+licenses, subscriptions, hosting, support, or other services, and license
+that material to others on different terms. This license does not require
+gekko to provide future releases, updates, support, or commercial licenses.
+
+Future releases may be offered under different terms. Such a change does not
+retroactively change rights granted for a copy already licensed to you. The
+current grant continues for that copy while you comply with its conditions.
+
+6. Contributions and ownership
+
+This license does not transfer ownership of your contributions to gekko and
+does not, on its own, authorize gekko to commercially relicense those
+contributions. Inclusion of external contributions in the official project
+requires a separate rights agreement sufficient for the project's commercial
+licensing model. See CONTRIBUTING.md. Submission alone is not a substitute
+for that agreement.
+
+7. Other rights
+
+No trademark, trade-name, logo, endorsement, or patent license is granted by
+these terms. You may use names as reasonably necessary for truthful
+identification and attribution, subject to applicable law. All permissions
+not expressly granted or independently held are reserved.
+
+8. Breach and termination
+
+The permissions granted by this license terminate automatically if you
+materially breach its conditions or use the Software beyond their scope.
+You must then stop activities that depend on those permissions and cease
+distributing copies under them. Reinstatement requires gekko's express
+written permission. Obligations concerning notices, existing third-party
+rights, and liability survive termination to the extent applicable.
+
+Termination under these terms does not terminate independently held rights,
+including the MIT rights described in section 1. Nothing here excludes any
+notice, remedy, or cure period required by applicable law.
+
+9. Warranty and liability
+
+To the extent permitted by applicable law, the Software is provided "as is"
+and "as available", without promises or warranties concerning fitness for a
+particular purpose, merchantability, accuracy, availability, security, title,
+or noninfringement. Unless separately agreed, gekko undertakes no obligation
+to maintain the Software or any external archive or encyclopedia service.
+
+To the extent permitted by applicable law, gekko is not liable for losses
+or damages arising from the Software or this license. This limitation does
+not exclude or limit liability for intent, gross negligence, injury to life,
+body or health, fraudulent concealment, an expressly assumed guarantee,
+mandatory product liability, or any other liability that cannot lawfully be
+excluded or limited. Mandatory statutory rights remain unaffected.
+
+10. Mandatory law and interpretation
+
+These terms do not restrict statutory exceptions, mandatory software-user
+rights, or other rights that cannot lawfully be waived. If a provision is
+unenforceable, it applies only to the extent permitted by law; the remaining
+provisions continue to apply to the extent legally possible. No failure or
+delay to enforce a provision constitutes a general waiver or grants a new
+license. A change or exception for a particular licensee requires gekko's
+express written or electronic agreement.
+
+This is a source-available, noncommercial license. It is not an OSI-approved
+open-source license and does not grant unrestricted commercial use.

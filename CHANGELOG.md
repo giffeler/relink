@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0 — 2026-09-10
+
+- Introduce the Relink Noncommercial License 1.0 for otherwise unlicensed additions and changes, with free noncommercial use and separate commercial agreements through gekko mbH.
+- Preserve the original 0.1.0 MIT notice and all existing permissions in the MIT baseline. This transition does not retroactively restrict commercial use of that material.
+- Add commercial-licensing guidance, a contribution-rights policy, and third-party licensing notices.
+- Update release metadata to distinguish the licensing transition from the MIT release. No link-maintenance functionality changes.
+
 ## 0.1.0 — 2026-09-10
 
 - Initial native EmDash 0.37.0 plugin and Astro output integration.

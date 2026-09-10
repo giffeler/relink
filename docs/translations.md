@@ -6,6 +6,8 @@ All documentation, comments and release notes are written in English. The admin 
 
 To contribute a translation:
 
+First arrange the contribution rights described in [CONTRIBUTING.md](../CONTRIBUTING.md). This also applies to translations and documentation so that gekko can include them in commercial distributions.
+
 1. Add the catalog with exactly the keys of the English catalog, including errors, notifications, empty states, reasons and accessibility labels.
 2. Extend the explicit locale resolver and supported catalog map.
 3. Add regional/fallback/plural tests and an actual browser language-switch test.
