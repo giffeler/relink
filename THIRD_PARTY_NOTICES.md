@@ -10,7 +10,7 @@ The original Relink 0.1.0 MIT notice is retained verbatim in [LICENSES/MIT-legac
 | ------------------------------ | --------------------------------- | ------------------------------------------------- |
 | parse5 8.0.1                   | MIT                               | Installed parse5 package                          |
 | Zod 4.5.4                      | MIT                               | Installed zod package                             |
-| EmDash and EmDash admin 0.37.0 | MIT                               | Installed emdash and @emdash-cms/admin packages   |
+| EmDash and EmDash admin 0.38.0 | MIT                               | Installed emdash and @emdash-cms/admin packages   |
 | Astro 7.3.1                    | MIT                               | Installed astro package                           |
 | React 19                       | MIT                               | Installed react package                           |
 | Lingui 5                       | MIT                               | Installed @lingui/core and @lingui/react packages |

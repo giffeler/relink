@@ -30,7 +30,7 @@ Scan cursors and generations are persisted after each page. Stale occurrences ar
 
 ## Routes
 
-Base path: `/_emdash/api/plugins/relink`. EmDash wraps results in its normal `{ success, data }` envelope. The client unwraps and validates it. Private routes inherit host authentication and CSRF protection; all cookie-authenticated calls require `X-EmDash-Request: 1`, and mutations additionally require `plugins:manage`. The client uses EmDash's API helper. Native route names in 0.37.0 do not select handlers by HTTP method, so every Relink handler explicitly rejects unexpected methods.
+Base path: `/_emdash/api/plugins/relink`. EmDash wraps results in its normal `{ success, data }` envelope. The client unwraps and validates it. Private routes inherit host authentication and CSRF protection; all cookie-authenticated calls require `X-EmDash-Request: 1`, and mutations additionally require `plugins:manage`. The client uses EmDash's API helper. Native route names in 0.38.0 do not select handlers by HTTP method, so every Relink handler explicitly rejects unexpected methods.
 
 | Method and path          | Access           | Purpose                                                                                 |
 | ------------------------ | ---------------- | --------------------------------------------------------------------------------------- |

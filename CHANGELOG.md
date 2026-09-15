@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3 — 2026-09-15
+
+- Add compatibility with EmDash 0.38.0.
+
 ## 0.2.2 — 2026-09-10
 
 - Show the original URL for every history event, with a keyboard-accessible action to open link details.

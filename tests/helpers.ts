@@ -85,10 +85,10 @@ export async function createTestStore(
   context: Pick<PluginContext, "storage" | "kv">;
 }> {
   const db = new Kysely<Database>({ dialect });
-  await sql`CREATE TABLE IF NOT EXISTS _plugin_storage (plugin_id TEXT NOT NULL, collection TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(plugin_id, collection, id))`.execute(
+  await sql`CREATE TABLE IF NOT EXISTS _plugin_storage (plugin_id TEXT NOT NULL, collection TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL, revision TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(plugin_id, collection, id))`.execute(
     db,
   );
-  await sql`CREATE TABLE IF NOT EXISTS options (name TEXT PRIMARY KEY, value TEXT NOT NULL)`.execute(
+  await sql`CREATE TABLE IF NOT EXISTS options (name TEXT PRIMARY KEY, value TEXT NOT NULL, revision TEXT NOT NULL)`.execute(
     db,
   );
   await sql`CREATE TABLE IF NOT EXISTS _emdash_cron_tasks (id TEXT PRIMARY KEY, plugin_id TEXT NOT NULL, task_name TEXT NOT NULL, schedule TEXT NOT NULL, is_oneshot INTEGER NOT NULL DEFAULT 0, data TEXT, next_run_at TEXT NOT NULL, last_run_at TEXT, status TEXT NOT NULL DEFAULT 'idle', locked_at TEXT, enabled INTEGER NOT NULL DEFAULT 1, UNIQUE(plugin_id, task_name))`.execute(
@@ -98,8 +98,18 @@ export async function createTestStore(
   const kv: KVAccess = {
     get: async <T>(key: string): Promise<T | null> =>
       repository.get<T>(`plugin:relink:${key}`),
+    getVersioned: async <T>(key: string) =>
+      repository.getVersioned<T>(`plugin:relink:${key}`),
     set: async (key, value) => repository.set(`plugin:relink:${key}`, value),
+    compareAndSet: async (key, expectedRevision, value) =>
+      repository.compareAndSet(
+        `plugin:relink:${key}`,
+        expectedRevision,
+        value,
+      ),
     delete: async (key) => repository.delete(`plugin:relink:${key}`),
+    compareAndDelete: async (key, expectedRevision) =>
+      repository.compareAndDelete(`plugin:relink:${key}`, expectedRevision),
     list: async (prefix = "") =>
       [...(await repository.getByPrefix(`plugin:relink:${prefix}`))].map(
         ([key, value]) => ({ key, value }),

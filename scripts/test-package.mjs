@@ -9,6 +9,9 @@ import { OptionsRepository, UserRepository } from "emdash";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const directory = resolve(root, "work/package-site");
 const artifacts = resolve(root, "work/artifacts");
+const rootPackage = JSON.parse(
+  await readFile(resolve(root, "package.json"), "utf8"),
+);
 const run = (args, cwd = directory) =>
   execFileSync("pnpm", args, { cwd, stdio: "inherit" });
 await mkdir(artifacts, { recursive: true });
@@ -25,7 +28,7 @@ const pkg = JSON.parse(
   await readFile(resolve(directory, "package.json"), "utf8"),
 );
 pkg.dependencies["emdash-plugin-relink"] =
-  `file:${resolve(artifacts, "emdash-plugin-relink-0.2.2.tgz")}`;
+  `file:${resolve(artifacts, `emdash-plugin-relink-${rootPackage.version}.tgz`)}`;
 await writeFile(
   resolve(directory, "package.json"),
   `${JSON.stringify(pkg, null, 2)}\n`,

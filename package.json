@@ -1,6 +1,6 @@
 {
   "name": "emdash-plugin-relink",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Keep EmDash links alive with verified archives and scheduled reviews.",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
@@ -11,7 +11,7 @@
   "engines": {
     "node": ">=22.16"
   },
-  "packageManager": "pnpm@11.19.0",
+  "packageManager": "pnpm@11.22.0",
   "files": [
     "dist",
     "README.md",
@@ -60,11 +60,11 @@
   },
   "peerDependencies": {
     "@cloudflare/kumo": "^2.6.0",
-    "@emdash-cms/admin": "0.37.0",
+    "@emdash-cms/admin": "0.38.0",
     "@lingui/core": "^5.0.0",
     "@lingui/react": "^5.0.0",
     "astro": "^7.3.1",
-    "emdash": "0.37.0",
+    "emdash": "0.38.0",
     "react": "^19.2.0"
   },
   "dependencies": {
@@ -77,8 +77,8 @@
     "@astrojs/react": "6.0.5",
     "@axe-core/playwright": "4.11.1",
     "@cloudflare/kumo": "^2.6.0",
-    "@emdash-cms/admin": "0.37.0",
-    "@emdash-cms/cloudflare": "0.37.0",
+    "@emdash-cms/admin": "0.38.0",
+    "@emdash-cms/cloudflare": "0.38.0",
     "@eslint/js": "10.0.1",
     "@lingui/core": "^5.9.5",
     "@lingui/react": "^5.9.5",
@@ -88,7 +88,7 @@
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
     "astro": "^7.3.1",
-    "emdash": "0.37.0",
+    "emdash": "0.38.0",
     "esbuild": "0.28.1",
     "eslint": "10.10.0",
     "jsdom": "30.0.1",

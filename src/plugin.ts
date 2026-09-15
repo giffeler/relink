@@ -238,7 +238,7 @@ export function createPlugin(rawOptions: unknown): ResolvedPlugin {
   };
   return definePlugin({
     id: "relink",
-    version: "0.2.2",
+    version: "0.2.3",
     capabilities: ["content:read", "network:request:unrestricted"],
     storage: storageDefinition,
     admin: adminConfiguration,
