@@ -74,7 +74,9 @@ test("history identifies legacy check targets and opens details with keyboard fo
     await settings("rtl");
     await login(page);
     await page.getByRole("button", { name: "History", exact: true }).click();
-    const entry = page.locator(".relink > .rl-history li");
+    const entry = page
+      .locator(".relink > .rl-history li")
+      .filter({ hasText: "Broken · Not found" });
     await expect(entry).toContainText("Link checked");
     const target = entry.getByRole("button", { name: link.url, exact: true });
     await expect(target).toBeVisible();

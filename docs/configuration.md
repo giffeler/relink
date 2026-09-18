@@ -5,6 +5,7 @@
 | Option                         | Meaning                                                                                                                                         |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `siteUrl`                      | Absolute public site URL. Same-origin links are excluded.                                                                                       |
+| `logFile`                      | Optional absolute POSIX path to a Node-only JSON Lines log. No file is written when omitted; EmDash host logging is always enabled. See [operational logging](installation.md#operational-logging). |
 | `sources`                      | Explicit collections and fields to index. At least one is required.                                                                             |
 | `sources[].collection`         | Existing EmDash collection slug.                                                                                                                |
 | `sources[].path`               | Published pathname template, default `/{slug}`. Supports `{slug}` and `{locale}`. Must match the theme's actual path, including trailing slash. |

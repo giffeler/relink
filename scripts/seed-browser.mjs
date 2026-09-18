@@ -1,4 +1,4 @@
-import { Kysely } from "kysely";
+import { Kysely, sql } from "kysely";
 import { createDialect } from "emdash/db/sqlite";
 import { ContentRepository, PluginStorageRepository } from "emdash";
 import {
@@ -15,6 +15,11 @@ const db = new Kysely({
   }),
 });
 try {
+  // The package test has already exercised the real scheduler. Keep it from
+  // racing deterministic browser fixtures in this disposable local database.
+  await sql`UPDATE _emdash_cron_tasks SET enabled = 0 WHERE plugin_id = 'relink'`.execute(
+    db,
+  );
   const options = optionsSchema.parse({
     siteUrl: "http://localhost:4321",
     sources: [

@@ -11,7 +11,7 @@ External link maintenance for EmDash. Relink inventories published links, checks
 Install the released package in your EmDash site:
 
 ```sh
-pnpm add emdash-plugin-relink@0.2.3
+pnpm add emdash-plugin-relink@0.2.4
 ```
 
 Keep EmDash and `@emdash-cms/admin` at 0.38.0, React on major version 19, and Lingui on major version 5. If your package manager does not install peer dependencies automatically, add the matching admin and Lingui packages explicitly.
@@ -24,7 +24,7 @@ pnpm check
 pnpm pack --pack-destination work/artifacts
 ```
 
-Install the resulting `emdash-plugin-relink-0.2.3.tgz` in the host site.
+Install the resulting `emdash-plugin-relink-0.2.4.tgz` in the host site.
 
 ```ts
 // astro.config.ts
@@ -83,6 +83,8 @@ Authentication, bot blocking, rate limiting and local outages are distinct from 
 The admin includes filters, CSV export, a history view, source excerpts and editor links, manual actions, a dashboard widget and a content-editor panel. It follows the active EmDash language without adding a language selector. RTL is a presentation option, not an Arabic or Hebrew translation.
 
 ## Development and verification
+
+Every maintenance run writes structured diagnostics through EmDash's logger. Node operators can additionally set `logFile` to an absolute path for a rotating JSON Lines file. See [operational logging](docs/installation.md#operational-logging) for configuration, retention and how to distinguish successful runs from broken external links.
 
 ```sh
 pnpm check                    # strict types, lint, unit/integration tests, package build

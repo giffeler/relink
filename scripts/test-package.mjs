@@ -43,6 +43,11 @@ await cp(
   resolve(directory, "src/local-auth.ts"),
 );
 let config = await readFile(resolve(directory, "astro.config.mjs"), "utf8");
+const logFile = resolve(directory, "logs/maintenance.jsonl");
+config = config.replace(
+  "relink({",
+  `relink({ logFile: ${JSON.stringify(logFile)},`,
+);
 config = config.replace(
   "database: sqlite",
   `auth: { type: 'relink-fixture', entrypoint: ${JSON.stringify(resolve(directory, "src/local-auth.ts"))}, config: {} },\n    database: sqlite`,
@@ -106,8 +111,57 @@ try {
     !Array.isArray(snapshot.data?.links)
   )
     throw new Error("Packaged native plugin route failed");
+  const command = await fetch(
+    `http://127.0.0.1:${port}/_emdash/api/plugins/relink/commands`,
+    {
+      method: "POST",
+      headers: {
+        cookie: "relink-fixture=admin",
+        "X-EmDash-Request": "1",
+        "content-type": "application/json",
+        origin: `http://127.0.0.1:${port}`,
+      },
+      body: JSON.stringify({ action: "scan" }),
+    },
+  );
+  if (!command.ok || (await command.json()).success !== true)
+    throw new Error("Packaged scan command failed");
+  let completed = false;
+  for (let attempt = 0; attempt < 110; attempt++) {
+    const contents = await readFile(logFile, "utf8").catch((error) => {
+      if (error.code === "ENOENT") return "";
+      throw error;
+    });
+    const records = contents
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+    if (records.some((record) => record.event.endsWith(".failed")))
+      throw new Error("Packaged maintenance or logging failed");
+    const completion = records.find(
+      (record) => record.event === "run.completed",
+    );
+    if (completion) {
+      if (
+        completion.version !== rootPackage.version ||
+        !records.some(
+          (record) =>
+            record.event === "run.started" && record.runId === completion.runId,
+        )
+      )
+        throw new Error("Packaged maintenance log identity mismatch");
+      completed = true;
+      break;
+    }
+    await new Promise((done) => setTimeout(done, 1000));
+  }
+  if (!completed)
+    throw new Error(
+      "Packaged scheduled run did not complete within 110 seconds",
+    );
   console.log(
-    "Built-package installation, published SSR and authenticated plugin API passed.",
+    "Built-package installation, published SSR, authenticated plugin API and scheduled JSONL logging passed.",
   );
 } finally {
   server.kill("SIGTERM");

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.4 — 2026-09-18
+
+- Verify native-plugin compatibility with EmDash and `@emdash-cms/admin` 0.38.0, including SQLite/D1 persistence, scheduling, installed-package SSR and admin integration.
+- Record correlated maintenance starts, completions, failure stages, scan batches, commands and link outcomes through EmDash's logger. Add optional Node JSON Lines files with size-based rotation and restricted permissions.
+- Keep URL paths, query strings, article content and raw exception messages out of operational logs. Log-destination failures do not interrupt maintenance.
+- Wait for all in-flight checks before reporting a failed batch; preserve the previous successful completion time and original error when persistence fails.
+- Fix CI setup by reading the pnpm version from `package.json`.
+
 ## 0.2.3 — 2026-09-15
 
 - Add compatibility with EmDash 0.38.0.

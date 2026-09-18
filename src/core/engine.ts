@@ -15,6 +15,9 @@ import type {
 } from "./schema.js";
 import type { RelinkStore } from "./storage.js";
 import { checkUrl, domainExcluded } from "./url.js";
+import { errorFields } from "../logging.js";
+import type { LogFields, MaintenanceLog } from "../logging.js";
+import { VERSION } from "../metadata.js";
 
 export function newLink(id: string, url: string, now: number): LinkRecord {
   return {
@@ -47,11 +50,13 @@ export interface EngineDependencies {
   clock?: () => number;
   archive?: ArchiveProvider;
   encyclopedia?: EncyclopediaProvider;
+  log?: (record: MaintenanceLog) => Promise<void>;
 }
 
 /** Invoke tick only through EmDash's single, atomically claimed recurring job. */
 export class RelinkEngine {
   private readonly clock: () => number;
+  private runId: string | null = null;
   constructor(private readonly dependencies: EngineDependencies) {
     this.clock = dependencies.clock ?? Date.now;
   }
@@ -60,15 +65,29 @@ export class RelinkEngine {
   }
 
   async tick(): Promise<void> {
-    const state = await this.store.state();
-    state.lastStartedAt = this.clock();
-    state.lastError = null;
-    await this.store.saveState(state);
+    this.runId = crypto.randomUUID();
+    const startedAt = this.clock();
+    let state: WorkerState | undefined;
+    let stage = "read-state";
+    let previousCompletedAt: number | null = null;
+    let previousProcessed = 0;
+    await this.log("run.started", {});
     try {
+      state = await this.store.state();
+      previousCompletedAt = state.lastCompletedAt;
+      previousProcessed = state.processed;
+      state.lastStartedAt = startedAt;
+      state.lastError = null;
+      stage = "save-start";
+      await this.store.saveState(state);
+      stage = "commands";
       await this.processCommands(state);
+      stage = "settings";
       const settings = await this.store.settings();
       if (settings.enabled) {
+        stage = "scan";
         await this.scanBatch(state);
+        stage = "checks";
         const checker = new LinkChecker(
           this.dependencies.transport,
           settings,
@@ -84,19 +103,64 @@ export class RelinkEngine {
         for (const link of due.items)
           if (!groups.has(link.host) && groups.size < settings.batchSize)
             groups.set(link.host, link);
-        await Promise.all(
+        const currentState = state;
+        const results = await Promise.allSettled(
           [...groups.values()].map(async (link) => {
             await this.checkLink(link, settings, checker);
-            state.processed++;
+            currentState.processed++;
           }),
         );
+        // Drain the batch before reporting failure or releasing the cron claim.
+        const failure = results.find((result) => result.status === "rejected");
+        if (failure?.status === "rejected") throw failure.reason;
       }
+      stage = "save-completion";
       state.lastCompletedAt = this.clock();
       await this.store.saveState(state);
+      await this.log("run.completed", {
+        durationMs: this.clock() - startedAt,
+        enabled: settings.enabled,
+        processed: state.processed - previousProcessed,
+        totalProcessed: state.processed,
+        scanPending: state.scan !== null,
+        nextScanAt: state.nextScanAt,
+      });
     } catch (error) {
-      state.lastError = "storage";
-      await this.store.saveState(state);
+      await this.log("run.failed", {
+        stage,
+        durationMs: this.clock() - startedAt,
+        processed: state ? state.processed - previousProcessed : 0,
+        ...errorFields(error),
+      });
+      if (state) {
+        state.lastError = "storage";
+        state.lastCompletedAt = previousCompletedAt;
+        try {
+          await this.store.saveState(state);
+        } catch (persistenceError) {
+          await this.log("state.save.failed", errorFields(persistenceError));
+        }
+      }
       throw error;
+    } finally {
+      this.runId = null;
+    }
+  }
+
+  private async log(event: string, fields: LogFields): Promise<void> {
+    if (!this.runId || !this.dependencies.log) return;
+    try {
+      await this.dependencies.log({
+        ...fields,
+        component: "relink",
+        version: VERSION,
+        timestamp: new Date(this.clock()).toISOString(),
+        site: new URL(this.dependencies.options.siteUrl).origin,
+        runId: this.runId,
+        event,
+      });
+    } catch {
+      // Diagnostic failures must never change link decisions or cron outcomes.
     }
   }
 
@@ -128,6 +192,10 @@ export class RelinkEngine {
       // Persist the scan request before acknowledging its command.
       await this.store.saveState(state);
       await this.store.commands.delete(command.id);
+      await this.log("command.completed", {
+        commandId: command.id,
+        action: command.input.action,
+      });
     }
   }
 
@@ -216,6 +284,7 @@ export class RelinkEngine {
       limit: 10,
       ...(scan.cursor ? { cursor: scan.cursor } : {}),
     });
+    let occurrenceCount = 0;
     for (const content of page.items) {
       if (content.status !== "published") continue;
       const occurrences = await extractOccurrences(
@@ -233,6 +302,7 @@ export class RelinkEngine {
         this.dependencies.options.siteUrl,
         scan.generation,
       );
+      occurrenceCount += occurrences.length;
       for (const occurrence of occurrences) {
         const existing = await this.store.links.get(occurrence.linkId);
         const link =
@@ -281,6 +351,14 @@ export class RelinkEngine {
       }
     }
     await this.store.saveState(state);
+    await this.log("scan.batch.completed", {
+      generation: scan.generation,
+      collection: source.collection,
+      documents: page.items.length,
+      occurrences: occurrenceCount,
+      collectionCompleted: scan.cursor === null,
+      scanCompleted: state.scan === null,
+    });
   }
 
   async checkLink(
@@ -292,6 +370,12 @@ export class RelinkEngine {
     if (link.excluded || domainExcluded(link.host, settings.excludedDomains)) {
       link.nextCheckAt = now + settings.healthyDays * DAY;
       await this.store.links.put(link.id, link);
+      await this.log("link.skipped", {
+        linkId: link.id,
+        host: link.host,
+        reason: "excluded",
+        nextCheckAt: link.nextCheckAt,
+      });
       return;
     }
     let result = await checker.check(link.url);
@@ -438,5 +522,15 @@ export class RelinkEngine {
     }
     await this.store.links.put(link.id, link);
     await this.event(link, event, `${link.id}:${now}:${event}`);
+    await this.log("link.checked", {
+      linkId: link.id,
+      host: link.host,
+      result: result.kind,
+      status: result.status,
+      reason: result.kind === "healthy" ? null : result.reason,
+      replacement: link.replacement?.kind ?? null,
+      historyEvent: event,
+      nextCheckAt: link.nextCheckAt,
+    });
   }
 }

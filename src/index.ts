@@ -1,7 +1,7 @@
 import type { PluginDescriptor } from "emdash";
 import { optionsSchema } from "./core/schema.js";
 import type { RelinkOptions, ResolvedOptions } from "./core/schema.js";
-import { adminConfiguration } from "./metadata.js";
+import { adminConfiguration, VERSION } from "./metadata.js";
 
 /** Register in emdash({ plugins: [relink(options)] }). */
 export function relink(
@@ -9,7 +9,7 @@ export function relink(
 ): PluginDescriptor<ResolvedOptions> {
   return {
     id: "relink",
-    version: "0.2.3",
+    version: VERSION,
     format: "native",
     entrypoint: "emdash-plugin-relink/runtime",
     options: optionsSchema.parse(options),

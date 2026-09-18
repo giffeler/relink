@@ -10,7 +10,8 @@ import { commandInputSchema, optionsSchema } from "./core/schema.js";
 import type { CommandInput, ResolvedOptions } from "./core/schema.js";
 import { RelinkStore, storageDefinition } from "./core/storage.js";
 import { isPublicUrl } from "./core/url.js";
-import { adminConfiguration } from "./metadata.js";
+import { adminConfiguration, VERSION } from "./metadata.js";
+import { maintenanceLogger } from "./logging.js";
 
 const TASK = "maintenance-v1";
 export function requireMethod(request: Request, method: "GET" | "POST"): void {
@@ -238,7 +239,7 @@ export function createPlugin(rawOptions: unknown): ResolvedPlugin {
   };
   return definePlugin({
     id: "relink",
-    version: "0.2.3",
+    version: VERSION,
     capabilities: ["content:read", "network:request:unrestricted"],
     storage: storageDefinition,
     admin: adminConfiguration,
@@ -267,6 +268,7 @@ export function createPlugin(rawOptions: unknown): ResolvedPlugin {
               content: ctx.content,
               transport: ctx.http,
               options,
+              log: maintenanceLogger(ctx.log, options),
             }).tick();
         },
       },

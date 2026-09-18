@@ -182,6 +182,7 @@ export const collectionSourceSchema = z.object({
 });
 export const optionsSchema = z.object({
   siteUrl: httpUrl,
+  logFile: z.string().min(1).max(4096).startsWith("/").optional(),
   sources: z.array(collectionSourceSchema).min(1),
   settings: settingsSchema.default(defaultSettings),
   networkProbeUrls: z
