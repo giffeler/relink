@@ -6,18 +6,19 @@ allowBuilds:
   sharp: true
   workerd: true
 minimumReleaseAgeExclude:
-  - '@emdash-cms/admin@0.38.0'
-  - '@emdash-cms/auth@0.38.0'
-  - '@emdash-cms/blocks@0.38.0'
-  - '@emdash-cms/gutenberg-to-portable-text@0.38.0'
-  - "@emdash-cms/plugin-types@0.3.1"
-  - '@emdash-cms/registry-client@0.6.0'
-  - '@emdash-cms/registry-verification@0.3.1'
-  - emdash@0.38.0
-  - '@emdash-cms/cloudflare@0.38.0'
-  - '@emdash-cms/registry-lexicons@0.5.0'
+  - '@emdash-cms/admin@0.39.0'
+  - '@emdash-cms/auth@0.39.0'
+  - '@emdash-cms/blocks@0.39.0'
+  - '@emdash-cms/gutenberg-to-portable-text@0.39.0'
+  - "@emdash-cms/plugin-types@0.4.0"
+  - '@emdash-cms/registry-client@0.6.1'
+  - '@emdash-cms/registry-verification@0.3.2'
+  - emdash@0.39.0
+  - '@emdash-cms/cloudflare@0.39.0'
+  - '@emdash-cms/registry-lexicons@0.6.0'
   - '@emdash-cms/registry-moderation@0.2.0'
 overrides:
+  devalue: 5.9.4
   kysely: 0.29.5
   "sharp@<0.35.4": 0.35.4
   "undici@>=7.0.0 <7.29.0": 7.29.0

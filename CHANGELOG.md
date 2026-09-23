@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.5 - 2026-09-23
+
+- Add compatibility with EmDash and `@emdash-cms/admin` 0.39.0.
+- Update the dependency and package-install test fixtures, including the patched devalue release.
+
 ## 0.2.4 — 2026-09-18
 
 - Verify native-plugin compatibility with EmDash and `@emdash-cms/admin` 0.38.0, including SQLite/D1 persistence, scheduling, installed-package SSR and admin integration.
