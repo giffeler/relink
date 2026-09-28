@@ -122,6 +122,7 @@ export const linkSchema = z.object({
   firstFailureAt: timestamp.nullable(),
   lastFailureAt: timestamp.nullable(),
   failures: z.number().int().nonnegative(),
+  unverifiableAttempts: z.number().int().nonnegative().default(0),
   recoveryAt: timestamp.nullable(),
   lastCheck: checkResultSchema.nullable(),
   replacement: replacementSchema.nullable(),
@@ -180,9 +181,26 @@ export const collectionSourceSchema = z.object({
   path: z.string().startsWith("/").default("/{slug}"),
   pathAliases: z.array(z.string().startsWith("/")).max(20).default([]),
 });
+export const httpOptionsSchema = z.object({
+  maxHtmlBytes: z
+    .number()
+    .int()
+    .min(64_000)
+    .max(4 * 1024 * 1024)
+    .default(2 * 1024 * 1024),
+  userAgent: z
+    .string()
+    .min(1)
+    .max(512)
+    .regex(/^[\x20-\x7e]+$/u)
+    .optional(),
+});
+export type HttpOptions = z.infer<typeof httpOptionsSchema>;
+export const defaultHttpOptions: HttpOptions = httpOptionsSchema.parse({});
 export const optionsSchema = z.object({
   siteUrl: httpUrl,
   logFile: z.string().min(1).max(4096).startsWith("/").optional(),
+  http: httpOptionsSchema.default(defaultHttpOptions),
   sources: z.array(collectionSourceSchema).min(1),
   settings: settingsSchema.default(defaultSettings),
   networkProbeUrls: z
@@ -239,6 +257,7 @@ export const stateSchema = z.object({
   lastCompletedAt: timestamp.nullable(),
   lastError: z.enum(["storage", "content", "network"]).nullable(),
   processed: z.number().int().nonnegative(),
+  hostCooldowns: z.record(z.string(), timestamp).default({}),
 });
 export type WorkerState = z.infer<typeof stateSchema>;
 export const initialState = (): WorkerState => ({
@@ -249,6 +268,7 @@ export const initialState = (): WorkerState => ({
   lastCompletedAt: null,
   lastError: null,
   processed: 0,
+  hostCooldowns: {},
 });
 export const DAY = 86_400_000;
 export const HOUR = 3_600_000;

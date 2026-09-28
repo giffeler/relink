@@ -1,8 +1,9 @@
 import { object } from "./extract.js";
 import { pageEvidence } from "./html.js";
-import type { CheckResult, Settings } from "./schema.js";
-import { HOUR } from "./schema.js";
+import type { CheckResult, HttpOptions, Settings } from "./schema.js";
+import { defaultHttpOptions, HOUR } from "./schema.js";
 import { isPublicUrl } from "./url.js";
+import { VERSION } from "../metadata.js";
 
 /** Production transports must enforce DNS-aware SSRF checks (EmDash ctx.http does). */
 export interface HttpTransport {
@@ -10,6 +11,11 @@ export interface HttpTransport {
 }
 export class BodyLimitError extends Error {
   override name = "BodyLimitError";
+}
+class HostCooldownError extends Error {
+  constructor(readonly retryAt: number) {
+    super("Host cooldown is active");
+  }
 }
 export async function readLimited(
   response: Response,
@@ -58,6 +64,8 @@ export class LinkChecker {
     private readonly transport: HttpTransport,
     private readonly settings: Settings,
     private readonly clock: () => number = Date.now,
+    private readonly options: HttpOptions = defaultHttpOptions,
+    private readonly hostCooldowns: Record<string, number> = {},
   ) {}
 
   async request(url: string, method = "GET"): Promise<Response> {
@@ -71,16 +79,32 @@ export class LinkChecker {
     try {
       for (let redirects = 0; redirects <= 5; redirects++) {
         if (!isPublicUrl(current)) throw new Error("Unsafe URL");
+        const host = new URL(current).hostname;
+        const cooldown = this.hostCooldowns[host];
+        if (cooldown !== undefined && cooldown > this.clock())
+          throw new HostCooldownError(cooldown);
         const response = await this.transport.fetch(current, {
           method,
           redirect: "manual",
           signal: controller.signal,
           headers: {
-            "User-Agent": "Relink/0.2 (+https://github.com/giffeler/relink)",
+            "User-Agent":
+              this.options.userAgent ??
+              `Relink/${VERSION} (+https://github.com/giffeler/relink)`,
             Accept:
               "text/html,application/xhtml+xml,application/pdf;q=0.9,*/*;q=0.8",
           },
         });
+        if (
+          response.status === 429 ||
+          (response.status === 503 && response.headers.has("retry-after"))
+        ) {
+          this.hostCooldowns[host] = Math.max(
+            this.hostCooldowns[host] ?? 0,
+            retryAfter(response.headers.get("retry-after"), this.clock()) ??
+              this.clock() + HOUR,
+          );
+        }
         if (![301, 302, 303, 307, 308].includes(response.status))
           return response;
         const location = response.headers.get("location");
@@ -97,9 +121,11 @@ export class LinkChecker {
   async check(
     url: string,
     inspectBody = true,
-    method: "HEAD" | "GET" = "HEAD",
+    method: "HEAD" | "GET" = "GET",
   ): Promise<CheckResult> {
     const now = this.clock();
+    let finalUrl = url;
+    let observedStatus: number | null = null;
     const unknown = (
       reason: Extract<CheckResult, { kind: "unverifiable" }>["reason"],
       status: number | null = null,
@@ -107,7 +133,7 @@ export class LinkChecker {
     ): CheckResult => ({
       kind: "unverifiable",
       checkedAt: now,
-      finalUrl: url,
+      finalUrl,
       status,
       reason,
       retryAt: next,
@@ -119,6 +145,9 @@ export class LinkChecker {
       // A non-2xx HEAD is not sufficient evidence of a dead resource.
       if (
         method === "HEAD" &&
+        ![401, 403, 407, 429, 451].includes(response.status) &&
+        response.headers.get("cf-mitigated") !== "challenge" &&
+        !(response.status === 503 && response.headers.has("retry-after")) &&
         (!response.ok ||
           (inspectBody && (!contentType || /html/iu.test(contentType))))
       ) {
@@ -126,17 +155,34 @@ export class LinkChecker {
         response = await this.request(url, "GET");
       }
       const status = response.status;
-      const finalUrl = response.url || url;
+      observedStatus = status;
+      finalUrl = response.url || url;
+      if (response.headers.get("cf-mitigated") === "challenge") {
+        await response.body?.cancel();
+        return unknown(
+          "blocked",
+          status,
+          retryAfter(response.headers.get("retry-after"), now),
+        );
+      }
       if ([401, 407].includes(status)) {
         await response.body?.cancel();
         return unknown("authentication", status);
       }
       if ([403, 451].includes(status)) {
         await response.body?.cancel();
-        return unknown("blocked", status);
+        return unknown(
+          "blocked",
+          status,
+          retryAfter(response.headers.get("retry-after"), now),
+        );
       }
-      if (status === 429) {
-        const next = retryAfter(response.headers.get("retry-after"), now);
+      if (
+        status === 429 ||
+        (status === 503 && response.headers.has("retry-after"))
+      ) {
+        const next =
+          retryAfter(response.headers.get("retry-after"), now) ?? now + HOUR;
         await response.body?.cancel();
         return unknown("rate-limited", status, next);
       }
@@ -157,7 +203,11 @@ export class LinkChecker {
       const actualType = response.headers.get("content-type") ?? contentType;
       const body =
         inspectBody && /html/iu.test(actualType)
-          ? await this.read(response)
+          ? await readLimited(
+              response,
+              this.options.maxHtmlBytes,
+              this.settings.timeoutMs,
+            )
           : "";
       if (!body) await response.body?.cancel();
       const evidence = body ? pageEvidence(body, finalUrl) : null;
@@ -177,13 +227,21 @@ export class LinkChecker {
         evidence,
       };
     } catch (error) {
-      if (error instanceof BodyLimitError) return unknown("response-too-large");
+      if (error instanceof BodyLimitError)
+        return unknown("response-too-large", observedStatus);
+      if (error instanceof HostCooldownError)
+        return unknown("rate-limited", null, error.retryAt);
       const code =
         error instanceof Error ? object(error.cause)?.["code"] : undefined;
       const details =
         error instanceof Error
           ? `${error.message} ${typeof code === "string" ? code : ""}`
           : "";
+      // The host bridge can reject a body before Relink receives its Response.
+      if (
+        /Plugin HTTP response body exceeds the \d+ byte limit/iu.test(details)
+      )
+        return unknown("response-too-large", observedStatus);
       // EmDash's DNS guard wraps NXDOMAIN in its blocked-fetch error. Retain
       // that evidence without treating an actual private-address refusal as DNS failure.
       if (/Hostname resolved to no addresses/iu.test(details))

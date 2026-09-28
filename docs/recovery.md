@@ -2,9 +2,30 @@
 
 ## Checking originals
 
-Relink tries HEAD first and confirms unsuccessful or HTML responses with GET. Redirects are bounded to five and ten-second request timeouts apply. Inspected bodies are limited to 512 KB. A successful HEAD cannot override a failing GET. Sign-in pages, bot challenges and suspicious soft-error titles are marked unverifiable.
+Relink uses GET directly for ordinary link checks, avoiding a preceding HEAD request to the same target. Redirects are bounded to five and ten-second request timeouts apply. Complete HTML responses are inspected up to 2 MiB by default; `http.maxHtmlBytes` can increase the ceiling to at most 4 MiB. Oversized responses remain unverifiable, with their HTTP status retained; truncated HTML is never accepted as complete identity or section evidence. Provider API payloads retain a separate 512,000-byte limit. Sign-in pages, bot challenges and suspicious soft-error titles are marked unverifiable. Explicit HEAD checks remain available internally, but do not immediately repeat an authentication, blocking or rate-limit refusal with GET.
 
-404/410 and repeated server or transport failures can contribute to a broken-link decision. 401/407, 403/451 and 429 remain distinct authentication, blocked and rate-limited results. `Retry-After` is honoured with bounds. For transport/5xx failures, independent network probes must answer successfully enough to establish connectivity before a failure counts. If both probes fail, Relink records a local outage, retries in an hour and does not advance archive eligibility.
+404/410 and repeated server or transport failures can contribute to a broken-link decision. 401/407, 403/451 and 429 remain distinct authentication, blocked and rate-limited results. A `cf-mitigated: challenge` response remains blocked even at HTTP 200 or 503, following [Cloudflare's documented challenge signal](https://developers.cloudflare.com/cloudflare-challenges/challenge-types/challenge-pages/detect-response/). HTTP 503 with `Retry-After` is treated as a temporary rate-limit result. `Retry-After` is honoured between one minute and seven days. For other transport/5xx failures, independent network probes must answer successfully enough to establish connectivity before a failure counts. If both probes fail, Relink records a local outage, retries in an hour and does not advance archive eligibility.
+
+## Reducing inconclusive checks
+
+The scheduler already selects at most one original link per hostname per tick. HTTP 429 and HTTP 503 with `Retry-After` additionally pause that hostname across URLs, redirects, provider requests and subsequent scheduled runs. Without a valid header, a 429 pauses the host for one hour. Cooldowns survive process restarts; expired entries are discarded. Deferring a scheduled sibling link emits `link.deferred` and moves its next check without overwriting its previous evidence. This policy is per site; separate sites do not coordinate their requests.
+
+Repeated unverifiable results without an explicit retry time use intervals of one, three and then seven days. A healthy or broken observation resets this counter. **Check again** resets the per-link backoff but respects an active host cooldown. Existing records load with zero attempts and no cooldowns; no data migration is required. These changes reduce unnecessary requests; an existing block is not proof that the target has disappeared.
+
+For an operator-identifiable crawler, configure a public contact page:
+
+```ts
+relink({
+  siteUrl: "https://your-site.example",
+  http: {
+    userAgent: "Relink (+https://your-site.example/crawler)",
+    maxHtmlBytes: 2 * 1024 * 1024,
+  },
+  sources: [{ collection: "posts", path: "/posts/{slug}" }],
+});
+```
+
+For persistent 403 responses, verify the original manually and request allowlisting from the destination operator where appropriate. Keep uncertain links for review or explicitly exclude a domain. A HEAD response, a search result or an available archive does not establish that the original is healthy or dead. Authentication and challenges remain review items; this release does not use browser impersonation, rotating proxies or CAPTCHA solving. Configuration changes take effect after rebuilding/restarting the site. Existing records are re-evaluated on their next scheduled check, or through **Check again**.
 
 Failures count at most once per 24 hours, including manual retries. The default schedule is first check, +24 hours, +72 hours from initial failure. The third confirmed failure permits archive discovery. Healthy originals reset the failure series. Originals behind an active archive return after two successful checks at least 24 hours apart; an intervening confirmed broken check resets recovery evidence.
 

@@ -1,7 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RelinkEngine, newLink } from "../src/core/engine.js";
 import { LinkChecker } from "../src/core/http.js";
-import { DAY, defaultSettings } from "../src/core/schema.js";
+import {
+  DAY,
+  HOUR,
+  defaultSettings,
+  initialState,
+  linkSchema,
+  stateSchema,
+} from "../src/core/schema.js";
 import type { ReplacementRule } from "../src/core/schema.js";
 import { RelinkStore } from "../src/core/storage.js";
 import { adminSnapshot, pageProjection } from "../src/plugin.js";
@@ -34,6 +41,88 @@ const archiveRule: ReplacementRule = {
 };
 
 describe("persistent link maintenance on Node SQLite", () => {
+  it("loads pre-upgrade link and worker records without a migration", () => {
+    const legacyLink = Object.fromEntries(
+      Object.entries(
+        newLink("legacy", "https://external.example/", NOW),
+      ).filter(([key]) => key !== "unverifiableAttempts"),
+    );
+    const legacyState = Object.fromEntries(
+      Object.entries(initialState()).filter(([key]) => key !== "hostCooldowns"),
+    );
+    expect(linkSchema.parse(legacyLink).unverifiableAttempts).toBe(0);
+    expect(stateSchema.parse(legacyState).hostCooldowns).toEqual({});
+  });
+  it("backs off repeated blocked checks without replacing links and resets after recovery", async () => {
+    const { store } = await fixture();
+    let now = NOW;
+    let status = 403;
+    const transport = { fetch: async () => response(status) };
+    const engine = new RelinkEngine({
+      store,
+      content: contentAccess([]),
+      transport,
+      options,
+      clock: () => now,
+    });
+    const checker = new LinkChecker(transport, defaultSettings, () => now);
+    const link = newLink("blocked", "https://external.example/", now);
+    for (const days of [1, 3, 7, 7]) {
+      await engine.checkLink(link, defaultSettings, checker);
+      expect(link.nextCheckAt).toBe(now + days * DAY);
+      expect(link.failures).toBe(0);
+      expect(link.replacement).toBeNull();
+      now = link.nextCheckAt;
+    }
+    status = 200;
+    await engine.checkLink(link, defaultSettings, checker);
+    expect(link.unverifiableAttempts).toBe(0);
+    status = 403;
+    now += DAY;
+    await engine.checkLink(link, defaultSettings, checker);
+    expect(link.nextCheckAt).toBe(now + DAY);
+  });
+  it("persists host rate limits across restarts, defers siblings, and keeps other hosts running", async () => {
+    const { store, context } = await fixture();
+    let now = NOW;
+    const state = initialState();
+    state.nextScanAt = NOW + DAY;
+    await store.saveState(state);
+    for (const [id, url] of [
+      ["a", "https://limited.example/a"],
+      ["b", "https://limited.example/b"],
+      ["c", "https://other.example/c"],
+    ] as const) {
+      await store.links.put(id, newLink(id, url, NOW));
+    }
+    const fetch = vi.fn(async (url: string) =>
+      url.includes("limited.example")
+        ? response(429, "", url, { "retry-after": "7200" })
+        : response(200, undefined, url),
+    );
+    const createEngine = () =>
+      new RelinkEngine({
+        store: new RelinkStore(context, defaultSettings),
+        content: contentAccess([]),
+        transport: { fetch },
+        options,
+        clock: () => now,
+      });
+    await createEngine().tick();
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect((await store.state()).hostCooldowns["limited.example"]).toBe(
+      NOW + 2 * HOUR,
+    );
+    now += 60000;
+    await createEngine().tick();
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect((await store.links.get("b"))?.nextCheckAt).toBe(NOW + 2 * HOUR);
+    expect((await store.links.get("b"))?.lastCheck).toBeNull();
+    expect((await store.links.get("c"))?.lastCheck?.kind).toBe("healthy");
+    now = NOW + 2 * HOUR;
+    await createEngine().tick();
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
   it("returns the links belonging to each history page, including legacy events without URLs", async () => {
     const { store } = await fixture();
     const first = newLink("a", "https://first.example/", NOW);
@@ -90,7 +179,7 @@ describe("persistent link maintenance on Node SQLite", () => {
     expect((await store.state()).scan).toBeNull();
     expect(await store.links.all()).toHaveLength(1);
     expect(await store.occurrences.all()).toHaveLength(12);
-    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenCalledTimes(1);
     expect(JSON.stringify(items)).toBe(before);
     items.splice(0);
     await store.commands.put("scan", {

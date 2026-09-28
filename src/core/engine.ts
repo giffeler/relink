@@ -31,6 +31,7 @@ export function newLink(id: string, url: string, now: number): LinkRecord {
     firstFailureAt: null,
     lastFailureAt: null,
     failures: 0,
+    unverifiableAttempts: 0,
     recoveryAt: null,
     lastCheck: null,
     replacement: null,
@@ -88,10 +89,17 @@ export class RelinkEngine {
         stage = "scan";
         await this.scanBatch(state);
         stage = "checks";
+        state.hostCooldowns = Object.fromEntries(
+          Object.entries(state.hostCooldowns).filter(
+            ([, until]) => until > this.clock(),
+          ),
+        );
         const checker = new LinkChecker(
           this.dependencies.transport,
           settings,
           this.clock,
+          this.dependencies.options.http,
+          state.hostCooldowns,
         );
         const due = await this.store.links.page({
           where: { active: true, nextCheckAt: { lte: this.clock() } },
@@ -100,9 +108,22 @@ export class RelinkEngine {
         });
         // A bounded tick stays below EmDash's ten-minute stale-claim window.
         const groups = new Map<string, LinkRecord>();
-        for (const link of due.items)
+        for (const link of due.items) {
+          const until = state.hostCooldowns[link.host];
+          if (until !== undefined && until > this.clock()) {
+            link.nextCheckAt = until;
+            await this.store.links.put(link.id, link);
+            await this.log("link.deferred", {
+              linkId: link.id,
+              host: link.host,
+              reason: "host-cooldown",
+              nextCheckAt: until,
+            });
+            continue;
+          }
           if (!groups.has(link.host) && groups.size < settings.batchSize)
             groups.set(link.host, link);
+        }
         const currentState = state;
         const results = await Promise.allSettled(
           [...groups.values()].map(async (link) => {
@@ -215,6 +236,7 @@ export class RelinkEngine {
     switch (input.action) {
       case "check":
         link.nextCheckAt = Math.min(link.nextCheckAt, command.createdAt);
+        link.unverifiableAttempts = 0;
         link.grokipediaChecked = false;
         break;
       case "exclude":
@@ -238,6 +260,8 @@ export class RelinkEngine {
           this.dependencies.transport,
           await this.store.settings(),
           this.clock,
+          this.dependencies.options.http,
+          state.hostCooldowns,
         );
         const result = await checker.check(input.url);
         if (result.kind === "healthy") {
@@ -407,7 +431,16 @@ export class RelinkEngine {
     ];
     switch (result.kind) {
       case "unverifiable":
-        link.nextCheckAt = result.retryAt ?? now + DAY;
+        link.unverifiableAttempts++;
+        link.nextCheckAt =
+          result.retryAt ??
+          now +
+            (link.unverifiableAttempts === 1
+              ? 1
+              : link.unverifiableAttempts === 2
+                ? 3
+                : 7) *
+              DAY;
         link.review = { dueAt: link.nextCheckAt, reason: "unverifiable" };
         if (link.replacement) {
           const replacement = await checker.check(link.replacement.url);
@@ -419,6 +452,7 @@ export class RelinkEngine {
         }
         break;
       case "healthy": {
+        link.unverifiableAttempts = 0;
         link.failures = 0;
         link.firstFailureAt = null;
         link.lastFailureAt = null;
@@ -466,6 +500,7 @@ export class RelinkEngine {
         break;
       }
       case "broken": {
+        link.unverifiableAttempts = 0;
         link.recoveryAt = null;
         link.firstFailureAt ??= now;
         if (link.lastFailureAt === null || now - link.lastFailureAt >= DAY) {

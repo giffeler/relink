@@ -1,12 +1,22 @@
 # Validation and known limitations
 
+## EmDash compatibility through 0.42.0
+
+Relink 0.2.6 is tested with EmDash **0.38.0, 0.39.0, 0.40.0, 0.41.0 and 0.42.0**, always paired with the matching `@emdash-cms/admin` and `@emdash-cms/cloudflare` versions. Package peer dependencies list these exact releases; prereleases and versions beyond 0.42.0 are not covered.
+
+Each version runs strict type checking, lint, unit/integration tests (including real SQLite and D1 storage/scheduling), and the package build. The 0.42.0 fixture additionally runs the isolated package-install/scheduled-log test, the 11-test browser suite and the Node/Cloudflare example builds. Local validation uses Node 26.10.0; CI is configured to repeat the matrix on Node 24.
+
+To reproduce another matrix entry in a disposable checkout, run `node scripts/set-compatibility-version.mjs 0.40.0`, `pnpm install --no-frozen-lockfile`, then `pnpm check`. The selector changes development/example manifests and retains the reviewed 0.42.0 release-age exceptions so the baseline lockfile can be verified before resolving the selected version. The committed default lockfile targets 0.42.0. Use separate checkouts when running entries concurrently.
+
 ## Reproducible checks
 
 `pnpm check` runs strict TypeScript checking, typed ESLint rules, Vitest and declaration/package builds. The suite exercises HTTP status distinctions, HEAD/GET disagreement, redirects, timeouts, response limits, archive evidence/outages, Grokipedia ambiguity/language/sections, recovery intervals, duplicate targets, removed occurrences, restart state, undo exceptions, publication checks, output replacement and cache headers. Catalog tests cover regional locales, fallback and pluralization.
 
 Maintenance-log tests verify run correlation, real SQLite processing counters, idle-run reporting, state-read/write failures, URL-query omission, unwritable file fallback, concurrent appends, restrictive permissions and 5 MiB rotation with five retained archives. Logging failures must not alter maintenance outcomes. The installed-package test also waits for a real scheduled run and validates its JSON Lines completion record.
 
-Platform tests use the actual EmDash `PluginStorageRepository` and native Node SQLite adapter. The D1 test uses the actual EmDash D1 adapter against a local workerd D1 binding supplied by stable Miniflare 4.20260730.0. Only the binding import is substituted. Both platforms run EmDash 0.39.0's real atomic cron claim/recovery implementation. That pinned internal scheduler import is confined to tests; the shipped plugin uses only public EmDash APIs.
+Platform tests use the actual EmDash `PluginStorageRepository` and native Node SQLite adapter. The D1 test uses the actual EmDash D1 adapter against a local workerd D1 binding supplied by stable Miniflare 4.20260730.0. Only the binding import is substituted. Both platforms run the selected EmDash release's real atomic cron claim/recovery implementation. That internal scheduler import is confined to tests; the shipped plugin uses only public EmDash APIs.
+
+Request-policy regressions cover large complete HTML, hard byte limits, a single GET per ordinary target, explicit HEAD refusals, challenge responses at HTTP 200/403/503, configurable crawler identity, host cooldowns across URLs/redirects/restarts, concurrent cooldown updates, progressive retry intervals, recovery resets and pre-upgrade records. Deferring a host must not overwrite a sibling link's prior evidence or prevent unrelated hosts from being checked.
 
 The workspace and isolated example pin vulnerable transitive versions of sharp to 0.35.4 and Undici 7 to 7.29.0. These patches address upstream [sharp](https://github.com/lovell/sharp/security/advisories/GHSA-rgj7-g3m4-5g8c) and [Undici](https://github.com/nodejs/undici/security/advisories/GHSA-4cwx-7wf7-3272) advisories. The plugin's own runtime dependencies are parse5 and Zod; consuming sites manage their EmDash/Astro dependency updates independently.
 
@@ -32,4 +42,4 @@ The browser seed disables Relink's cron task only in the disposable `work/packag
 - Notifications stay inside EmDash. No email or external messaging integration is included.
 - This validation covers local Node/SQLite, local workerd/D1, built package installation and example builds. Production Cloudflare account configuration, real Cron delivery, CDN overrides and sustained load require deployment-specific checks.
 
-English documentation is maintained alongside the code. Behavioural changes require matching tests and release notes; compatibility beyond EmDash 0.39.0 must be verified rather than assumed.
+English documentation is maintained alongside the code. Behavioural changes require matching tests and release notes; compatibility beyond EmDash 0.42.0 must be verified rather than assumed.

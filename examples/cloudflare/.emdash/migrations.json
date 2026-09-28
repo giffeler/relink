@@ -1,6 +1,6 @@
 {
 	"schemaVersion": 1,
-	"emdashVersion": "0.38.0",
+	"emdashVersion": "0.42.0",
 	"migrationSet": {
 		"names": [
 			"001_initial",
@@ -78,9 +78,21 @@
 			"074_content_deleted_scheduled_index",
 			"075_entry_edit_locks",
 			"076_collection_nav_group",
-			"077_plugin_storage_revisions"
+			"077_plugin_storage_revisions",
+			"078_menu_item_translation_groups",
+			"079_datetime_normalization",
+			"080_content_translation_locale_unique",
+			"081_redirect_write_guards",
+			"082_taxonomy_translation_locale_unique",
+			"083_block_types",
+			"084_site_transfer",
+			"085_taxonomy_def_groups",
+			"086_relations_structural",
+			"087_reference_field_relations",
+			"088_cron_oneshot_utc",
+			"089_auto_seed_completion"
 		],
-		"fingerprint": "8414f4f91891e4e0f965235b2b71d210484571268f0f39ba5091881e1cb0ebe7"
+		"fingerprint": "4a0f99ad0646f6c73a16399fccdacbc8ae5dad595e3ce5588904fa940a6e608b"
 	},
 	"i18n": null,
 	"database": {

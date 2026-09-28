@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.6 - 2026-09-28
+
+- Test EmDash and matching admin packages from 0.38.0 through 0.42.0; add an explicit compatibility matrix and use 0.42.0 in development and installation fixtures.
+- Use a single GET for ordinary checks and inspect complete HTML up to 2 MiB by default, with a configurable ceiling of 4 MiB. Preserve HTTP status and final URL when the body exceeds the limit.
+- Persist host-wide cooldowns after HTTP 429 and HTTP 503 with `Retry-After`, including redirected destinations and archive providers. Retain prior link evidence when a scheduled check is deferred.
+- Back off repeated inconclusive checks to one, three and seven days, while respecting explicit retry times and keeping blocked links out of automatic archive eligibility.
+- Recognize Cloudflare challenge headers regardless of HTTP status and support a configurable crawler identity with an operator contact URL.
+
 ## 0.2.5 - 2026-09-23
 
 - Add compatibility with EmDash and `@emdash-cms/admin` 0.39.0.

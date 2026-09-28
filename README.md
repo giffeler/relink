@@ -2,19 +2,18 @@
 
 External link maintenance for EmDash. Relink inventories published links, checks them in the background, uses verified Wayback captures after repeated failures, and keeps a review history. Original content, drafts and revisions are never rewritten.
 
-**Compatibility:** EmDash 0.39.0, Astro 7.3.1, React 19 and Lingui 5. English and German interfaces; automatic or forced text direction. This is a native plugin, installed through your site's configuration; it is not a sandbox marketplace bundle.
+**Compatibility:** Tested with EmDash 0.38.0, 0.39.0, 0.40.0, 0.41.0 and **0.42.0**, with matching `@emdash-cms/admin` versions. The default development and example fixtures use 0.42.0, Astro 7.3.1, React 19 and Lingui 5. English and German interfaces; automatic or forced text direction. This is a native plugin, installed through your site's configuration; it is not a sandbox marketplace bundle. See the [validation scope](docs/testing.md).
 
 **Licensing:** [Relink Noncommercial License 1.0](LICENSE). Noncommercial use is free; commercial use of material governed by the new license requires a separate agreement with **gekko mbH** at [info2504@gekko.de](mailto:info2504@gekko.de). This is source-available software, not OSI-approved open source. **The previously released 0.1.0 code retains its MIT permissions, including commercial use.** The licensing transition started with version 0.2.0. See [licensing and commercial use](docs/licensing.md) for the exact scope and the rights needed for external contributions.
 
 ## Install
 
-Install the released package in your EmDash site:
-
+Install **Relink 0.2.6**:
 ```sh
-pnpm add emdash-plugin-relink@0.2.5
+pnpm add emdash-plugin-relink@0.2.6
 ```
 
-Keep EmDash and `@emdash-cms/admin` at 0.39.0, React on major version 19, and Lingui on major version 5. If your package manager does not install peer dependencies automatically, add the matching admin and Lingui packages explicitly.
+Keep EmDash and `@emdash-cms/admin` on the same tested version through 0.42.0, React on major version 19, and Lingui on major version 5. If your package manager does not install peer dependencies automatically, add the matching admin and Lingui packages explicitly.
 
 To build a distribution archive from source instead:
 
@@ -24,7 +23,7 @@ pnpm check
 pnpm pack --pack-destination work/artifacts
 ```
 
-Install the resulting `emdash-plugin-relink-0.2.5.tgz` in the host site.
+Install the resulting `emdash-plugin-relink-0.2.6.tgz` in the host site.
 
 ```ts
 // astro.config.ts
@@ -79,6 +78,8 @@ Open **Relink** in the EmDash navigation and choose **Scan published content**. 
 | Undo automatic replacement  | Preserve an exception across scans and restarts             |
 
 Authentication, bot blocking, rate limiting and local outages are distinct from broken links. Grokipedia matching is optional and disabled by default. Matching slugs alone never permit a replacement; language, canonical identity, visible article evidence and section targets must match.
+
+Checks use one GET by default, inspect complete HTML up to 2 MiB, and retain host-wide rate-limit pauses across scheduled runs. Repeated inconclusive checks back off to one, three and seven days. Operators can configure the bounded HTML budget and a crawler identity with a public contact URL. See [request policy and blocked targets](docs/recovery.md#reducing-inconclusive-checks).
 
 The admin includes filters, CSV export, a history view, source excerpts and editor links, manual actions, a dashboard widget and a content-editor panel. It follows the active EmDash language without adding a language selector. RTL is a presentation option, not an Arabic or Hebrew translation.
 

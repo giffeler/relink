@@ -30,6 +30,7 @@ export type {
   TextDirection,
   CollectionSource,
   HistoryEntry,
+  HttpOptions,
 } from "./core/schema.js";
 export type { ContentDocument } from "./core/extract.js";
 export type {

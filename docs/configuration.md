@@ -6,6 +6,8 @@
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `siteUrl`                      | Absolute public site URL. Same-origin links are excluded.                                                                                       |
 | `logFile`                      | Optional absolute POSIX path to a Node-only JSON Lines log. No file is written when omitted; EmDash host logging is always enabled. See [operational logging](installation.md#operational-logging). |
+| `http.maxHtmlBytes`            | Maximum complete HTML response size, default 2,097,152 bytes (2 MiB); allowed range 64,000–4,194,304 bytes. Responses exceeding the budget remain unverifiable. Provider API payloads retain their separate 512,000-byte limit. |
+| `http.userAgent`               | Optional printable ASCII crawler identity, up to 512 characters. The default identifies the current Relink version and repository. Use an honest identity with a public operator contact URL; do not include secrets. |
 | `sources`                      | Explicit collections and fields to index. At least one is required.                                                                             |
 | `sources[].collection`         | Existing EmDash collection slug.                                                                                                                |
 | `sources[].path`               | Published pathname template, default `/{slug}`. Supports `{slug}` and `{locale}`. Must match the theme's actual path, including trailing slash. |
