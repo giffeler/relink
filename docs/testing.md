@@ -1,8 +1,14 @@
 # Validation and known limitations
 
-## EmDash compatibility through 0.42.0
+## EmDash 1.3.0 compatibility confirmation
 
-Relink 0.2.6 is tested with EmDash **0.38.0, 0.39.0, 0.40.0, 0.41.0 and 0.42.0**, always paired with the matching `@emdash-cms/admin` and `@emdash-cms/cloudflare` versions. Package peer dependencies list these exact releases; prereleases and versions beyond 0.42.0 are not covered.
+Compatibility with **EmDash 1.3.0** has been tested and confirmed by the project maintainers, as recorded on **2026-10-15**. This confirmation is separate from the automated matrix described below; the detailed checks and platform coverage documented for that matrix apply to its listed versions.
+
+The committed CI matrix, development dependencies, example fixtures and lockfile still target EmDash 0.38.0 through 0.42.0. Relink 0.2.6's EmDash/admin peer dependencies also list only those releases, so package managers may report a peer-dependency mismatch with 1.3.0. This documentation update records the confirmed compatibility without changing package metadata or publishing a new package.
+
+## Automated EmDash compatibility matrix
+
+Relink 0.2.6 is tested with EmDash **0.38.0, 0.39.0, 0.40.0, 0.41.0 and 0.42.0**, always paired with the matching `@emdash-cms/admin` and `@emdash-cms/cloudflare` versions. These are the exact releases covered by the automated matrix.
 
 Each version runs strict type checking, lint, unit/integration tests (including real SQLite and D1 storage/scheduling), and the package build. The 0.42.0 fixture additionally runs the isolated package-install/scheduled-log test, the 11-test browser suite and the Node/Cloudflare example builds. Local validation uses Node 26.10.0; CI is configured to repeat the matrix on Node 24.
 
@@ -42,4 +48,4 @@ The browser seed disables Relink's cron task only in the disposable `work/packag
 - Notifications stay inside EmDash. No email or external messaging integration is included.
 - This validation covers local Node/SQLite, local workerd/D1, built package installation and example builds. Production Cloudflare account configuration, real Cron delivery, CDN overrides and sustained load require deployment-specific checks.
 
-English documentation is maintained alongside the code. Behavioural changes require matching tests and release notes; compatibility beyond EmDash 0.42.0 must be verified rather than assumed.
+English documentation is maintained alongside the code. Behavioural changes require matching tests and release notes; compatibility with versions other than the explicitly listed releases must be verified rather than assumed.

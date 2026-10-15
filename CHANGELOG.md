@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Record maintainer-confirmed compatibility with EmDash 1.3.0 on 2026-10-15. The existing automated matrix and package peer dependencies cover 0.38.0 through 0.42.0; this is a documentation-only update.
+
 ## 0.2.6 - 2026-09-28
 
 - Test EmDash and matching admin packages from 0.38.0 through 0.42.0; add an explicit compatibility matrix and use 0.42.0 in development and installation fixtures.

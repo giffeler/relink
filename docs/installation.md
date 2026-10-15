@@ -1,6 +1,8 @@
 # Installation and operation
 
-Relink 0.2.6 is tested with **EmDash 0.38.0 through 0.42.0**, using the matching admin package. It requires a server-rendered Astro site. `relink()` registers the native plugin and its admin extensions; `relinkAstro()` registers output middleware. Both registrations are required. Include `react()` so EmDash's admin can hydrate. Do not place native plugins in EmDash's sandboxed plugin list.
+Compatibility with **EmDash 1.3.0** has been tested and confirmed. Relink 0.2.6's automated matrix covers **EmDash 0.38.0 through 0.42.0**, using the matching admin package. Its declared EmDash/admin peer dependencies still list only those older releases, so package managers may report a peer-dependency mismatch with 1.3.0. See the [compatibility record and validation scope](testing.md#emdash-130-compatibility-confirmation).
+
+Relink requires a server-rendered Astro site. `relink()` registers the native plugin and its admin extensions; `relinkAstro()` registers output middleware. Both registrations are required. Include `react()` so EmDash's admin can hydrate. Do not place native plugins in EmDash's sandboxed plugin list.
 
 ## Operational logging
 

@@ -2,18 +2,19 @@
 
 External link maintenance for EmDash. Relink inventories published links, checks them in the background, uses verified Wayback captures after repeated failures, and keeps a review history. Original content, drafts and revisions are never rewritten.
 
-**Compatibility:** Tested with EmDash 0.38.0, 0.39.0, 0.40.0, 0.41.0 and **0.42.0**, with matching `@emdash-cms/admin` versions. The default development and example fixtures use 0.42.0, Astro 7.3.1, React 19 and Lingui 5. English and German interfaces; automatic or forced text direction. This is a native plugin, installed through your site's configuration; it is not a sandbox marketplace bundle. See the [validation scope](docs/testing.md).
+**Compatibility:** Compatibility with **EmDash 1.3.0** has been tested and confirmed. The automated compatibility matrix covers EmDash 0.38.0, 0.39.0, 0.40.0, 0.41.0 and 0.42.0, with matching `@emdash-cms/admin` versions. The default development and example fixtures use 0.42.0, Astro 7.3.1, React 19 and Lingui 5. English and German interfaces; automatic or forced text direction. This is a native plugin, installed through your site's configuration; it is not a sandbox marketplace bundle. See the [validation scope](docs/testing.md).
 
 **Licensing:** [Relink Noncommercial License 1.0](LICENSE). Noncommercial use is free; commercial use of material governed by the new license requires a separate agreement with **gekko mbH** at [info2504@gekko.de](mailto:info2504@gekko.de). This is source-available software, not OSI-approved open source. **The previously released 0.1.0 code retains its MIT permissions, including commercial use.** The licensing transition started with version 0.2.0. See [licensing and commercial use](docs/licensing.md) for the exact scope and the rights needed for external contributions.
 
 ## Install
 
 Install **Relink 0.2.6**:
+
 ```sh
 pnpm add emdash-plugin-relink@0.2.6
 ```
 
-Keep EmDash and `@emdash-cms/admin` on the same tested version through 0.42.0, React on major version 19, and Lingui on major version 5. If your package manager does not install peer dependencies automatically, add the matching admin and Lingui packages explicitly.
+Keep EmDash and `@emdash-cms/admin` on matching versions, React on major version 19, and Lingui on major version 5. If your package manager does not install peer dependencies automatically, add the matching admin and Lingui packages explicitly. Relink 0.2.6's declared EmDash/admin peer dependencies still list only 0.38.0 through 0.42.0, so package managers may report a peer-dependency mismatch with EmDash 1.3.0 despite its confirmed compatibility. See the [compatibility record](docs/testing.md#emdash-130-compatibility-confirmation).
 
 To build a distribution archive from source instead:
 
