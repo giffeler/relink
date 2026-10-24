@@ -18,6 +18,7 @@ interface Found {
   url: string;
   path: string;
   text: string;
+  context?: string;
 }
 
 function visit(
@@ -76,6 +77,13 @@ function portableText(value: unknown, path: string, found: Found[]): void {
           run = {
             url: mark["href"],
             text: span["text"].slice(0, 500),
+            context: children
+              .map((child) => {
+                const item = object(child);
+                return typeof item?.["text"] === "string" ? item["text"] : "";
+              })
+              .join("")
+              .slice(0, 2000),
             path: `${path}[${index}].children[${childIndex}]`,
           };
           found.push(run);
@@ -118,6 +126,7 @@ export async function extractOccurrences(
       title: document.title,
       path: item.path,
       text: item.text,
+      context: item.context ?? "",
       pagePath: source.path
         .replaceAll("{slug}", encodeURIComponent(document.slug))
         .replaceAll("{locale}", encodeURIComponent(document.locale)),

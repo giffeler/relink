@@ -42,6 +42,9 @@ describe("published occurrences and rendering", () => {
     expect(result).toHaveLength(4);
     expect(new Set(result.map((entry) => entry.linkId)).size).toBe(1);
     expect(result.map((entry) => entry.text)).toContain("Second");
+    expect(result.find((entry) => entry.text === "Second")?.context).toContain(
+      "separator",
+    );
     expect(JSON.stringify(data)).toBe(before);
   });
   it("changes only matching anchor attributes and preserves HTML and fragments", () => {

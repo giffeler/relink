@@ -90,6 +90,14 @@ export const replacementSchema = z.discriminatedUnion("kind", [
     evidence: evidenceSchema,
   }),
   z.object({
+    kind: z.literal("wikipedia"),
+    url: httpUrl,
+    verifiedAt: timestamp,
+    reason: z.literal("verified-title-correction"),
+    fragments: z.array(z.string()),
+    evidence: evidenceSchema,
+  }),
+  z.object({
     kind: z.literal("manual"),
     url: httpUrl,
     verifiedAt: timestamp,
@@ -102,6 +110,7 @@ export const reviewReasonSchema = z.enum([
   "archive-missing",
   "archive-unavailable",
   "grokipedia-ambiguous",
+  "grokipedia-missing",
   "replacement-failed",
   "unverifiable",
   "manual-review",
@@ -111,6 +120,37 @@ export const reviewSchema = z.object({
   reason: reviewReasonSchema,
 });
 export type ReviewTask = z.infer<typeof reviewSchema>;
+export const matchCandidateSchema = z.object({
+  url: httpUrl,
+  title: z.string().max(500),
+  score: z.number().min(-1).max(1).nullable(),
+  titleScore: z.number().min(0).max(1),
+  decision: z.enum(["eligible", "review", "rejected"]),
+  reason: z.string().max(100),
+});
+export const matchAssessmentSchema = z.object({
+  checkedAt: timestamp,
+  status: z.enum(["matched", "review", "missing", "unavailable"]),
+  reason: z.string().max(100),
+  sourceUrl: httpUrl.nullable(),
+  sourceTitle: z.string().max(500),
+  sourceCorrected: z.boolean(),
+  model: z.string().max(200).nullable(),
+  queries: z.array(z.string().max(500)).max(6),
+  searchComplete: z.boolean(),
+  candidates: z.array(matchCandidateSchema).max(8),
+  suggestion: z
+    .object({
+      topic: z.string().max(500),
+      notes: z.string().max(3000),
+      url: httpUrl,
+      state: z.enum(["draft", "submitted"]),
+      submittedAt: timestamp.nullable(),
+    })
+    .nullable(),
+});
+export type MatchAssessment = z.infer<typeof matchAssessmentSchema>;
+export type MatchCandidate = z.infer<typeof matchCandidateSchema>;
 export const linkSchema = z.object({
   schemaVersion: z.literal(1),
   id: z.string(),
@@ -132,6 +172,7 @@ export const linkSchema = z.object({
   active: z.boolean(),
   archiveRetryAt: timestamp.nullable(),
   grokipediaChecked: z.boolean(),
+  matching: matchAssessmentSchema.nullable().default(null),
 });
 export type LinkRecord = z.infer<typeof linkSchema>;
 export const occurrenceSchema = z.object({
@@ -146,6 +187,7 @@ export const occurrenceSchema = z.object({
   title: z.string(),
   path: z.string(),
   text: z.string(),
+  context: z.string().max(2000).default(""),
   pagePath: z.string(),
   generation: z.string(),
 });
@@ -160,6 +202,7 @@ export const historySchema = z.object({
     "checked",
     "archive-applied",
     "grokipedia-applied",
+    "wikipedia-corrected",
     "original-restored",
     "replacement-unavailable",
     "excluded",
@@ -171,6 +214,7 @@ export const historySchema = z.object({
   result: checkResultSchema.nullable(),
   destination: z.string().nullable(),
   replacement: replacementSchema.nullable(),
+  matching: matchAssessmentSchema.nullable().optional(),
 });
 export type HistoryEntry = z.infer<typeof historySchema>;
 
@@ -199,6 +243,11 @@ export type HttpOptions = z.infer<typeof httpOptionsSchema>;
 export const defaultHttpOptions: HttpOptions = httpOptionsSchema.parse({});
 export const optionsSchema = z.object({
   siteUrl: httpUrl,
+  matching: z
+    .object({
+      socketPath: z.string().min(1).max(100).startsWith("/"),
+    })
+    .optional(),
   logFile: z.string().min(1).max(4096).startsWith("/").optional(),
   http: httpOptionsSchema.default(defaultHttpOptions),
   sources: z.array(collectionSourceSchema).min(1),
@@ -217,6 +266,10 @@ export type CollectionSource = z.infer<typeof collectionSourceSchema>;
 
 export const commandInputSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("scan") }),
+  z.object({
+    action: z.literal("suggestion-submitted"),
+    linkId: z.string().min(1),
+  }),
   z.object({ action: z.literal("check"), linkId: z.string().min(1) }),
   z.object({
     action: z.literal("exclude"),

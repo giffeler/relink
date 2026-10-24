@@ -3,6 +3,8 @@ import type { LinkChecker } from "./http.js";
 import { baseLanguage, checkUrl, normalizeUrl } from "./url.js";
 import type {
   CheckResult,
+  MatchAssessment,
+  LinkOccurrence,
   LinkRecord,
   PageEvidence,
   ReplacementRule,
@@ -18,13 +20,19 @@ export type DiscoveryReason =
   | "language-mismatch"
   | "article-mismatch"
   | "fragment-mismatch"
-  | "identity-language-match";
+  | "identity-language-match"
+  | "source-ambiguous"
+  | "search-unavailable"
+  | "semantic-unavailable"
+  | "no-suitable-match"
+  | "multiple-candidates"
+  | "verified-title-correction";
 export type DiscoveryResult = (
   | { kind: "found"; replacement: ReplacementRule }
   | { kind: "missing" }
   | { kind: "unavailable" }
   | { kind: "ambiguous" }
-) & { reason?: DiscoveryReason };
+) & { reason?: DiscoveryReason; assessment?: MatchAssessment };
 export interface ArchiveProvider {
   discover(
     link: LinkRecord,
@@ -35,6 +43,7 @@ export interface EncyclopediaProvider {
   discover(
     link: LinkRecord,
     fragments: readonly string[],
+    occurrences?: readonly LinkOccurrence[],
   ): Promise<DiscoveryResult>;
 }
 
@@ -45,7 +54,7 @@ function captureDate(value: string): number | null {
   );
   return Number.isNaN(date) ? null : date;
 }
-function hasFragments(
+export function hasFragments(
   evidence: PageEvidence | null,
   fragments: readonly string[],
 ): boolean {

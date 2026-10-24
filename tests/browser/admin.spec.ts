@@ -305,3 +305,85 @@ for (const [locale, expected] of [
     });
   });
 }
+
+test("matching candidates and suggestion drafts remain reviewable without external submission", async ({
+  page,
+}) => {
+  const db = new Kysely<Database>({
+    dialect: createDialect({ url: resolve("work/package-site/data.db") }),
+  });
+  const repository = new PluginStorageRepository(db, "relink", "links", []);
+  const item = (await repository.query({ limit: 1 })).items[0];
+  if (!item) throw new Error("Missing browser fixture");
+  const link = linkSchema.parse(item.data);
+  try {
+    await repository.put(item.id, {
+      ...link,
+      matching: {
+        checkedAt: Date.now(),
+        status: "missing",
+        reason: "no-suitable-match",
+        sourceUrl: "https://en.wikipedia.org/wiki/Example",
+        sourceTitle: "Example",
+        sourceCorrected: false,
+        model: "local",
+        queries: ["Example"],
+        searchComplete: true,
+        candidates: [
+          {
+            title: "Unrelated article",
+            url: "https://grokipedia.com/page/Unrelated",
+            score: 0.12,
+            titleScore: 0.1,
+            decision: "rejected",
+            reason: "article-mismatch",
+          },
+        ],
+        suggestion: {
+          topic: "Example",
+          notes:
+            "Topic: Example\nReference: https://en.wikipedia.org/wiki/Example",
+          url: "https://grokipedia.com/suggest?q=Example",
+          state: "draft",
+          submittedAt: null,
+        },
+      },
+    });
+    const external: string[] = [];
+    page.on("request", (request) => {
+      if (request.url().includes("grokipedia.com"))
+        external.push(request.url());
+    });
+    await login(page);
+    await page
+      .locator(".relink")
+      .getByRole("button", { name: link.url, exact: true })
+      .click();
+    const dialog = page.getByRole("dialog", { name: "Link details" });
+    await expect(
+      dialog.getByRole("heading", { name: "Article matching", exact: true }),
+    ).toBeVisible();
+    await expect(
+      dialog.getByRole("textbox", { name: "Article suggestion draft" }),
+    ).toHaveAttribute("readonly", "");
+    await expect(
+      dialog.getByRole("link", { name: "Suggest an article on Grokipedia" }),
+    ).toHaveAttribute("href", "https://grokipedia.com/suggest?q=Example");
+    const candidate = dialog
+      .locator("li")
+      .filter({ hasText: "Unrelated article" });
+    await expect(candidate.getByRole("button")).toBeDisabled();
+    await expect(candidate).toContainText("0.120");
+    expect(
+      (await new AxeBuilder({ page }).include(".relink").analyze()).violations,
+    ).toEqual([]);
+    await dialog
+      .getByRole("heading", { name: "Article matching", exact: true })
+      .scrollIntoViewIfNeeded();
+    await page.screenshot({ path: "work/soft-matching/admin-matching.png" });
+    expect(external).toEqual([]);
+  } finally {
+    await repository.put(item.id, link);
+    await db.destroy();
+  }
+});

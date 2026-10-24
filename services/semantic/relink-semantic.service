@@ -1,0 +1,30 @@
+[Unit]
+Description=Relink local article similarity (offline CPU inference)
+After=local-fs.target
+
+[Service]
+Type=simple
+User=relink-semantic
+Group=relink-semantic
+ExecStart=/opt/relink-semantic/venv/bin/python /opt/relink-semantic/server.py --cache /opt/relink-semantic/models
+Environment=HF_HUB_OFFLINE=1
+Environment=TOKENIZERS_PARALLELISM=false
+Environment=OMP_NUM_THREADS=2
+Environment=OPENBLAS_NUM_THREADS=2
+RuntimeDirectory=relink-semantic
+RuntimeDirectoryMode=0750
+UMask=0007
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+RestrictAddressFamilies=AF_UNIX
+IPAddressDeny=any
+MemoryMax=1G
+CPUQuota=150%
+TasksMax=32
+
+[Install]
+WantedBy=multi-user.target

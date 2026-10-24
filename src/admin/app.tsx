@@ -17,6 +17,22 @@ import { useRelinkLocale } from "./i18n.js";
 import type { MessageKey } from "./messages.js";
 
 type Translate = ReturnType<typeof useRelinkLocale>["t"];
+const matchingLabels: Record<string, MessageKey> = {
+  matched: "matchIdentity",
+  missing: "grokipedia-missing",
+  unavailable: "matchUnavailable",
+  "no-suitable-match": "grokipedia-missing",
+  "multiple-candidates": "matchReview",
+  eligible: "matchEligible",
+  review: "matchReview",
+  rejected: "matchRejected",
+  "identity-language-match": "matchIdentity",
+  "identity-conflict": "matchConflict",
+  "language-mismatch": "matchLanguage",
+  "fragment-mismatch": "matchFragment",
+  "article-mismatch": "matchArticle",
+  "source-ambiguous": "matchSource",
+};
 function Dialog({
   open,
   title,
@@ -778,6 +794,109 @@ export function RelinkApp({
                   </li>
                 ))}
               </ul>
+              {detail.link.matching && (
+                <section>
+                  <h3>{t("matching")}</h3>
+                  <p>{t("matchHelp")}</p>
+                  <p>
+                    {t(
+                      matchingLabels[detail.link.matching.status] ??
+                        "matchUnavailable",
+                    )}{" "}
+                    ·{" "}
+                    {t(
+                      matchingLabels[detail.link.matching.reason] ??
+                        "matchUnavailable",
+                    )}
+                  </p>
+                  {detail.link.matching.sourceUrl && (
+                    <p>
+                      {t("sourceResolved")}:{" "}
+                      <Url value={detail.link.matching.sourceUrl} />
+                    </p>
+                  )}
+                  <ul className="rl-sources">
+                    {detail.link.matching.candidates.map((candidate) => (
+                      <li key={candidate.url}>
+                        <strong>{candidate.title}</strong> ·{" "}
+                        {t(
+                          matchingLabels[candidate.decision] ??
+                            "matchUnavailable",
+                        )}
+                        <p>
+                          <Url value={candidate.url} />
+                        </p>
+                        <p>
+                          {t("similarity")}:{" "}
+                          {candidate.score === null
+                            ? "—"
+                            : candidate.score.toFixed(3)}{" "}
+                          ·{" "}
+                          {t(
+                            matchingLabels[candidate.reason] ??
+                              "matchUnavailable",
+                          )}
+                        </p>
+                        <Button
+                          disabled={
+                            busy ||
+                            !canManage ||
+                            candidate.decision === "rejected" ||
+                            candidate.reason === "fragment-mismatch"
+                          }
+                          onClick={() => {
+                            if (detail.link)
+                              void command({
+                                action: "destination",
+                                linkId: detail.link.id,
+                                url: candidate.url,
+                              });
+                          }}
+                        >
+                          {t("setDestination")}
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                  {detail.link.matching.suggestion && (
+                    <div>
+                      <h4>{t("suggestionDraft")}</h4>
+                      <p>{t("suggestionHelp")}</p>
+                      <textarea
+                        readOnly
+                        rows={8}
+                        aria-label={t("suggestionDraft")}
+                        value={detail.link.matching.suggestion.notes}
+                      />
+                      <p>
+                        <a
+                          href={detail.link.matching.suggestion.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {t("suggestArticle")}
+                        </a>
+                      </p>
+                      {detail.link.matching.suggestion.state === "submitted" ? (
+                        <p>{t("suggestionSubmitted")}</p>
+                      ) : (
+                        <Button
+                          disabled={busy || !canManage}
+                          onClick={() => {
+                            if (detail.link)
+                              void command({
+                                action: "suggestion-submitted",
+                                linkId: detail.link.id,
+                              });
+                          }}
+                        >
+                          {t("markSubmitted")}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </section>
+              )}
               <h3>{t("evidence")}</h3>
               {detail.link.replacement ? (
                 <dl>

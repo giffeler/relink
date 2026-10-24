@@ -1,6 +1,33 @@
 import type { Messages } from "@lingui/core";
 
 export const en = {
+  matchEligible: "Verified candidate",
+  matchReview: "Needs review",
+  matchRejected: "Not suitable",
+  matchIdentity: "Article identity and language agree",
+  matchConflict: "Different subject or conflicting identifying facts",
+  matchLanguage: "Different article language",
+  matchFragment: "Required section is missing",
+  matchArticle: "Insufficient evidence of the same subject",
+  matchSource: "Wikipedia source needs clarification",
+  matchUnavailable: "Matching could not be completed",
+
+  "wikipedia-corrected": "Wikipedia spelling corrected",
+  "verified-title-correction": "Title correction verified with source context",
+  "grokipedia-missing": "No suitable Grokipedia article found",
+  matching: "Article matching",
+  candidate: "Candidate",
+  similarity: "Content similarity",
+  matchHelp:
+    "Similarity is not a probability. Review topic identity and scope before choosing a destination.",
+  suggestArticle: "Suggest an article on Grokipedia",
+  suggestionDraft: "Article suggestion draft",
+  suggestionHelp:
+    "Review and copy the notes below. The link opens Grokipedia; sign in and submit there. Relink does not submit automatically.",
+  markSubmitted: "Mark as submitted",
+  suggestionSubmitted: "Marked as submitted",
+  sourceResolved: "Resolved Wikipedia source",
+
   title: "Relink",
   subtitle: "External links, kept in view.",
   attention: "Needs attention",
@@ -138,6 +165,33 @@ export const en = {
 } satisfies Messages;
 export type MessageKey = keyof typeof en;
 export const de = {
+  matchEligible: "Geprüfter Kandidat",
+  matchReview: "Prüfung erforderlich",
+  matchRejected: "Nicht geeignet",
+  matchIdentity: "Artikelidentität und Sprache stimmen überein",
+  matchConflict: "Anderes Thema oder widersprüchliche Identitätsmerkmale",
+  matchLanguage: "Andere Artikelsprache",
+  matchFragment: "Benötigter Abschnitt fehlt",
+  matchArticle: "Gleiches Thema nicht ausreichend belegt",
+  matchSource: "Wikipedia-Quelle muss geklärt werden",
+  matchUnavailable: "Abgleich konnte nicht abgeschlossen werden",
+
+  "wikipedia-corrected": "Wikipedia-Schreibweise korrigiert",
+  "verified-title-correction": "Titelkorrektur mit Quellkontext geprüft",
+  "grokipedia-missing": "Kein geeigneter Grokipedia-Artikel gefunden",
+  matching: "Artikelabgleich",
+  candidate: "Kandidat",
+  similarity: "Inhaltliche Ähnlichkeit",
+  matchHelp:
+    "Ähnlichkeit ist keine Wahrscheinlichkeit. Vor der Zielauswahl Thema und Umfang prüfen.",
+  suggestArticle: "Artikel bei Grokipedia vorschlagen",
+  suggestionDraft: "Entwurf für einen Artikelvorschlag",
+  suggestionHelp:
+    "Hinweise prüfen und kopieren. Der Link öffnet Grokipedia; dort anmelden und absenden. Relink sendet nicht automatisch.",
+  markSubmitted: "Als eingereicht markieren",
+  suggestionSubmitted: "Als eingereicht markiert",
+  sourceResolved: "Ermittelte Wikipedia-Quelle",
+
   title: "Relink",
   subtitle: "Externe Links im Blick.",
   attention: "Handlungsbedarf",

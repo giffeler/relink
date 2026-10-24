@@ -77,7 +77,10 @@ export function effectiveDestination(
   )
     return original;
   if (rule.kind === "archive" && !settings.archiveEnabled) return original;
-  if (rule.kind === "grokipedia" && !settings.grokipediaEnabled)
+  if (
+    (rule.kind === "grokipedia" || rule.kind === "wikipedia") &&
+    !settings.grokipediaEnabled
+  )
     return original;
   if (rule.kind === "manual") return rule.url;
   if (!rule.fragments.includes(new URL(original).hash)) return original;

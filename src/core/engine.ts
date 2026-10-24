@@ -17,6 +17,8 @@ import type { RelinkStore } from "./storage.js";
 import { checkUrl, domainExcluded } from "./url.js";
 import { errorFields } from "../logging.js";
 import type { LogFields, MaintenanceLog } from "../logging.js";
+import { SimilarityProvider } from "./matching.js";
+import { LocalSemanticScorer } from "./semantic.js";
 import { VERSION } from "../metadata.js";
 
 export function newLink(id: string, url: string, now: number): LinkRecord {
@@ -41,6 +43,7 @@ export function newLink(id: string, url: string, now: number): LinkRecord {
     active: true,
     archiveRetryAt: null,
     grokipediaChecked: false,
+    matching: null,
   };
 }
 export interface EngineDependencies {
@@ -201,6 +204,7 @@ export class RelinkEngine {
       result: link.lastCheck,
       destination: link.replacement?.url ?? null,
       replacement: link.replacement,
+      matching: link.matching,
     });
   }
 
@@ -235,6 +239,12 @@ export class RelinkEngine {
     if (!link) return;
     let event: HistoryEntry["event"] | null = null;
     switch (input.action) {
+      case "suggestion-submitted":
+        if (link.matching?.suggestion) {
+          link.matching.suggestion.state = "submitted";
+          link.matching.suggestion.submittedAt = this.clock();
+        }
+        break;
       case "check":
         link.nextCheckAt = Math.min(link.nextCheckAt, command.createdAt);
         link.unverifiableAttempts = 0;
@@ -430,6 +440,65 @@ export class RelinkEngine {
         occurrences.map((occurrence) => new URL(occurrence.originalUrl).hash),
       ),
     ];
+    let matched = false;
+    const softMatching = this.dependencies.options.matching;
+    if (
+      softMatching &&
+      settings.grokipediaEnabled &&
+      !link.automaticDisabled &&
+      link.replacement?.kind !== "manual" &&
+      /^[a-z-]+\.(?:m\.)?wikipedia\.org$/u.test(link.host) &&
+      (result.kind === "healthy" ||
+        (result.kind === "broken" && result.reason === "not-found"))
+    ) {
+      const provider =
+        this.dependencies.encyclopedia ??
+        new SimilarityProvider(
+          checker,
+          new LocalSemanticScorer(softMatching.socketPath),
+          this.clock,
+        );
+      const discovery = await provider.discover(link, fragments, occurrences);
+      link.matching = discovery.assessment ?? null;
+      link.grokipediaChecked = discovery.kind !== "unavailable";
+      await this.log("grokipedia.discovery", {
+        linkId: link.id,
+        host: link.host,
+        result: discovery.kind,
+        reason: discovery.reason ?? null,
+        candidates: discovery.assessment?.candidates.length ?? 0,
+        model: discovery.assessment?.model ?? null,
+        topScore: discovery.assessment?.candidates[0]?.score ?? null,
+      });
+      if (discovery.kind === "found") {
+        link.replacement = discovery.replacement;
+        event =
+          discovery.replacement.kind === "wikipedia"
+            ? "wikipedia-corrected"
+            : "grokipedia-applied";
+        link.review =
+          discovery.assessment?.status === "missing"
+            ? { dueAt: now, reason: "grokipedia-missing" }
+            : null;
+        matched = true;
+      } else {
+        // Uncertain revalidation must not keep an unverified automatic rewrite.
+        if (
+          link.replacement?.kind === "grokipedia" ||
+          link.replacement?.kind === "wikipedia"
+        ) {
+          link.replacement = null;
+          event = "original-restored";
+        }
+        link.review = {
+          dueAt: now,
+          reason:
+            discovery.kind === "missing"
+              ? "grokipedia-missing"
+              : "grokipedia-ambiguous",
+        };
+      }
+    }
     switch (result.kind) {
       case "unverifiable": {
         link.unverifiableAttempts++;
@@ -447,7 +516,7 @@ export class RelinkEngine {
             ? (result.retryAt ?? backoffAt)
             : Math.max(result.retryAt ?? 0, backoffAt);
         link.review = { dueAt: link.nextCheckAt, reason: "unverifiable" };
-        if (link.replacement) {
+        if (link.replacement && !matched) {
           const replacement = await checker.check(link.replacement.url);
           if (replacement.kind === "broken") {
             if (link.replacement.kind !== "manual") link.replacement = null;
@@ -464,7 +533,9 @@ export class RelinkEngine {
         link.lastFailureAt = null;
         link.archiveRetryAt = null;
         link.nextCheckAt = now + settings.healthyDays * DAY;
-        if (link.replacement?.kind === "archive") {
+        if (matched) {
+          // The provider just verified this destination, including all fragments.
+        } else if (link.replacement?.kind === "archive") {
           if (link.recoveryAt !== null && now - link.recoveryAt >= DAY) {
             link.replacement = null;
             link.review = null;
@@ -487,6 +558,7 @@ export class RelinkEngine {
           if (replacement.kind !== "healthy")
             link.review = { dueAt: now, reason: "replacement-failed" };
         } else if (
+          !softMatching &&
           settings.grokipediaEnabled &&
           !link.automaticDisabled &&
           /^[a-z-]+\.(?:m\.)?wikipedia\.org$/u.test(link.host)
@@ -532,7 +604,7 @@ export class RelinkEngine {
             : link.failures < 3
               ? Math.max(now + DAY, link.firstFailureAt + 3 * DAY)
               : now + settings.reviewDays * DAY;
-        if (link.replacement) {
+        if (link.replacement && !matched) {
           const replacement = await checker.check(link.replacement.url);
           if (replacement.kind === "broken") {
             if (link.replacement.kind !== "manual") link.replacement = null;

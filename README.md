@@ -24,7 +24,7 @@ pnpm check
 pnpm pack --pack-destination work/artifacts
 ```
 
-The source tree builds Relink **0.2.7**. Install the resulting `emdash-plugin-relink-0.2.7.tgz` in the host site. See the [production audit](docs/operations-2026-10-24.md) for the verified fixes and current matching limitations.
+The source tree builds Relink **0.2.8**. Install the resulting `emdash-plugin-relink-0.2.8.tgz` in the host site. See the [production audit](docs/operations-2026-10-24.md) for the initial fixes. The optional [local similarity service](docs/local-matching.md) adds alias search, conservative typo repair, reviewable candidates and missing-article suggestion drafts without paid inference. See the [deployment results](docs/operations-local-matching-2026-10-24.md).
 
 ```ts
 // astro.config.ts

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.8 - 2026-10-24
+
+- Add optional local CPU semantic matching over a Unix socket, with offline model integrity checks, resource limits and no paid inference fallback.
+- Discover Wikipedia canonical titles, redirects and typo candidates; search Grokipedia title and full-text indexes before scoring verified article evidence.
+- Require corroborating title/alias evidence, language, fragments and a clear candidate margin for automatic changes. Preserve uncertain cases for editorial review and remove automatic rules when revalidation becomes inconclusive.
+- Persist candidate decisions and scores in link details and history; retain published paragraph context for conservative source-title repair.
+- Prepare missing-article suggestion drafts only after successful searches. Opening Grokipedia and marking a draft submitted are explicit editorial actions; the plugin never submits an article-generation request.
+- Retain the existing matching provider when no local service is configured. Node-only local matching is opt-in.
+
 ## 0.2.7 - 2026-10-24
 
 - Read Grokipedia's visible article-body TTS spans as paragraph evidence while retaining language, canonical identity, content-overlap and section checks.

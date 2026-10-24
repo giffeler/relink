@@ -37,6 +37,8 @@ Discovery never submits pages to Save Page Now. Missing captures leave the origi
 
 ## Grokipedia
 
+With the optional Node-only `matching.socketPath` configuration, Relink 0.2.8 uses [local semantic matching](local-matching.md), including alias/typo search, candidate review and suggestion drafts. The following strict overlap rules describe the fallback provider used when that service is not configured.
+
 Disabled by default. The initial provider considers canonical Wikipedia `/wiki/` article URLs. Query-bearing/historical revisions and special namespaces are held for review. A candidate Grokipedia slug is only a discovery hint.
 
 Automatic eligibility additionally requires a reachable exact canonical Grokipedia URL, matching visible article titles, matching source/target language, a canonical Wikipedia source, sufficient independent introductory-content overlap, no disambiguation evidence, and matching section identifiers. The current overlap rule requires at least six shared significant words and 60% overlap relative to the smaller introduction vocabulary. This conservative heuristic is not a universal semantic identity proof; ambiguous or insufficient evidence stays unchanged. German sources cannot be redirected to English destinations.
