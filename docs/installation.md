@@ -93,3 +93,7 @@ Set each source's `path` to its indexed route. If the same published content is 
   portableTextFields: ["content"],
 }
 ```
+
+## Grokipedia diagnostics
+
+From 0.2.7, `run.completed.grokipediaEnabled` records the effective setting, including saved admin overrides. `grokipedia.discovery` reports a candidate's `result` and fixed-code `reason` without URL paths or content. A completed maintenance run is not proof that a replacement was applied: look for `link.checked.historyEvent = grokipedia-applied` and verify the public page's link. Missing or ambiguous candidates remain Wikipedia links and are reconsidered during later healthy checks.

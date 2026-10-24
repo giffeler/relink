@@ -82,6 +82,74 @@ describe("persistent link maintenance on Node SQLite", () => {
     await engine.checkLink(link, defaultSettings, checker);
     expect(link.nextCheckAt).toBe(now + DAY);
   });
+  it.each([403, 429])(
+    "backs off persistent %i responses even with a short Retry-After",
+    async (status) => {
+      const { store } = await fixture();
+      let now = NOW;
+      const transport = {
+        fetch: async () =>
+          response(status, "", "https://external.example/", {
+            "retry-after": "60",
+          }),
+      };
+      const engine = new RelinkEngine({
+        store,
+        content: contentAccess([]),
+        transport,
+        options,
+        clock: () => now,
+      });
+      const link = newLink("blocked", "https://external.example/", now);
+      for (const delay of [60000, 3 * DAY, 7 * DAY]) {
+        await engine.checkLink(
+          link,
+          defaultSettings,
+          new LinkChecker(transport, defaultSettings, () => now),
+        );
+        expect(link.nextCheckAt).toBe(now + delay);
+        expect(link.failures).toBe(0);
+        now = link.nextCheckAt;
+      }
+    },
+  );
+  it("retries past Grokipedia rejections on scheduled checks and logs the decision", async () => {
+    const { store } = await fixture();
+    const settings = { ...defaultSettings, grokipediaEnabled: true };
+    await store.saveSettings(settings);
+    const link = newLink("wiki", "https://en.wikipedia.org/wiki/Example", NOW);
+    link.grokipediaChecked = true;
+    await store.links.put(link.id, link);
+    const discover = vi.fn(async () => ({
+      kind: "ambiguous" as const,
+      reason: "article-mismatch" as const,
+    }));
+    const logs: Array<Record<string, unknown>> = [];
+    const engine = new RelinkEngine({
+      store,
+      content: contentAccess([]),
+      transport: { fetch: async () => response() },
+      options,
+      clock: () => NOW,
+      encyclopedia: { discover },
+      log: async (record) => {
+        logs.push(record);
+      },
+    });
+    await engine.tick();
+    expect(discover).toHaveBeenCalledTimes(1);
+    expect(logs).toContainEqual(
+      expect.objectContaining({
+        event: "grokipedia.discovery",
+        result: "ambiguous",
+        reason: "article-mismatch",
+      }),
+    );
+    expect(logs.at(-1)).toMatchObject({ grokipediaEnabled: true });
+    expect((await store.links.get(link.id))?.nextCheckAt).toBe(NOW + 7 * DAY);
+    await engine.tick();
+    expect(discover).toHaveBeenCalledTimes(1);
+  });
   it("persists host rate limits across restarts, defers siblings, and keeps other hosts running", async () => {
     const { store, context } = await fixture();
     let now = NOW;

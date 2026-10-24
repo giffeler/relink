@@ -1,6 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.2.7 - 2026-10-24
+
+- Read Grokipedia's visible article-body TTS spans as paragraph evidence while retaining language, canonical identity, content-overlap and section checks.
+- Retry previously rejected Grokipedia candidates on the regular healthy-link schedule instead of permanently caching a negative result.
+- Log Grokipedia discovery outcomes and rejection reasons, and include the effective feature setting in completed-run diagnostics.
+- Treat missing Grokipedia targets separately from temporary provider failures.
+- Apply three/seven-day backoff to repeated unverifiable responses even when the server keeps supplying a short `Retry-After`; retain a longer server-requested delay.
+- Verify installed-package storage, scheduler and admin integration on both production EmDash 1.3.1 sites. The historical automated compatibility matrix remains unchanged.
 
 - Record maintainer-confirmed compatibility with EmDash 1.3.0 on 2026-10-15. The existing automated matrix and package peer dependencies cover 0.38.0 through 0.42.0; this is a documentation-only update.
 

@@ -29,9 +29,24 @@ export function pageEvidence(html: string, url: string): PageEvidence {
   const main =
     nodes.find((node) => ["main", "article"].includes(node.tagName)) ??
     nodes.find((node) => node.tagName === "body");
-  const paragraphs = main
-    ? elements(main).filter((node) => node.tagName === "p")
-    : [];
+  // Grokipedia renders visible article paragraphs as TTS spans, not <p> tags.
+  // Scope this adapter to its article body; UI text and scripts are not evidence.
+  const grokipediaBody =
+    new URL(url).hostname === "grokipedia.com"
+      ? nodes.find((node) =>
+          attribute(node, "class").split(/\s+/u).includes("article-body"),
+        )
+      : undefined;
+  const paragraphs = grokipediaBody
+    ? elements(grokipediaBody).filter(
+        (node) =>
+          node.tagName === "p" ||
+          (node.tagName === "span" &&
+            attribute(node, "data-tts-block") === "true"),
+      )
+    : main
+      ? elements(main).filter((node) => node.tagName === "p")
+      : [];
   const introduction = paragraphs
     .map(textOf)
     .map((text) => text.replace(/\s+/gu, " ").trim())

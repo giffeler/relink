@@ -8,11 +8,23 @@ import type {
   ReplacementRule,
 } from "./schema.js";
 
-export type DiscoveryResult =
+export type DiscoveryReason =
+  | "unsupported-source"
+  | "source-evidence-missing"
+  | "target-unavailable"
+  | "target-not-found"
+  | "target-evidence-missing"
+  | "canonical-mismatch"
+  | "language-mismatch"
+  | "article-mismatch"
+  | "fragment-mismatch"
+  | "identity-language-match";
+export type DiscoveryResult = (
   | { kind: "found"; replacement: ReplacementRule }
   | { kind: "missing" }
   | { kind: "unavailable" }
-  | { kind: "ambiguous" };
+  | { kind: "ambiguous" }
+) & { reason?: DiscoveryReason };
 export interface ArchiveProvider {
   discover(
     link: LinkRecord,
@@ -207,42 +219,53 @@ export class GrokipediaProvider implements EncyclopediaProvider {
   ): Promise<DiscoveryResult> {
     const sourceUrl = new URL(link.url);
     if (!/^[a-z-]+\.(?:m\.)?wikipedia\.org$/u.test(sourceUrl.hostname))
-      return { kind: "missing" };
+      return { kind: "missing", reason: "unsupported-source" };
     try {
       if (
         !sourceUrl.pathname.startsWith("/wiki/") ||
         sourceUrl.search ||
         /:/u.test(decodeURIComponent(sourceUrl.pathname.slice(6)))
       )
-        return { kind: "ambiguous" };
+        return { kind: "ambiguous", reason: "unsupported-source" };
     } catch {
-      return { kind: "ambiguous" };
+      return { kind: "ambiguous", reason: "unsupported-source" };
     }
     const source: CheckResult | null = link.lastCheck;
     if (source?.kind !== "healthy" || !source.evidence)
-      return { kind: "ambiguous" };
+      return { kind: "ambiguous", reason: "source-evidence-missing" };
     try {
       const url = `https://grokipedia.com/page/${sourceUrl.pathname.slice(6)}`;
       const target = await this.checker.check(url);
-      if (target.kind === "unverifiable") return { kind: "unavailable" };
-      if (target.kind !== "healthy" || !target.evidence)
-        return { kind: "ambiguous" };
+      if (
+        target.kind === "unverifiable" ||
+        (target.kind === "broken" && target.reason !== "not-found")
+      )
+        return { kind: "unavailable", reason: "target-unavailable" };
+      if (target.kind === "broken")
+        return { kind: "missing", reason: "target-not-found" };
+      if (!target.evidence || !target.evidence.introduction)
+        return { kind: "ambiguous", reason: "target-evidence-missing" };
       const canonical = normalizeUrl(target.evidence.canonical);
       if (
         !canonical ||
         canonical !== url ||
         new URL(target.finalUrl).hostname !== "grokipedia.com"
       )
-        return { kind: "ambiguous" };
+        return { kind: "ambiguous", reason: "canonical-mismatch" };
       if (
         baseLanguage(source.evidence.language) !==
           sourceUrl.hostname.split(".")[0] ||
-        !sameArticle(source.evidence, target.evidence, link.url) ||
-        !hasFragments(target.evidence, fragments)
+        baseLanguage(source.evidence.language) !==
+          baseLanguage(target.evidence.language)
       )
-        return { kind: "ambiguous" };
+        return { kind: "ambiguous", reason: "language-mismatch" };
+      if (!sameArticle(source.evidence, target.evidence, link.url))
+        return { kind: "ambiguous", reason: "article-mismatch" };
+      if (!hasFragments(target.evidence, fragments))
+        return { kind: "ambiguous", reason: "fragment-mismatch" };
       return {
         kind: "found",
+        reason: "identity-language-match",
         replacement: {
           kind: "grokipedia",
           url,
@@ -253,7 +276,7 @@ export class GrokipediaProvider implements EncyclopediaProvider {
         },
       };
     } catch {
-      return { kind: "unavailable" };
+      return { kind: "unavailable", reason: "target-unavailable" };
     }
   }
 }

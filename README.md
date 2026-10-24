@@ -8,7 +8,7 @@ External link maintenance for EmDash. Relink inventories published links, checks
 
 ## Install
 
-Install **Relink 0.2.6**:
+Install the current npm release, **Relink 0.2.6**:
 
 ```sh
 pnpm add emdash-plugin-relink@0.2.6
@@ -24,7 +24,7 @@ pnpm check
 pnpm pack --pack-destination work/artifacts
 ```
 
-Install the resulting `emdash-plugin-relink-0.2.6.tgz` in the host site.
+The source tree builds Relink **0.2.7**. Install the resulting `emdash-plugin-relink-0.2.7.tgz` in the host site. See the [production audit](docs/operations-2026-10-24.md) for the verified fixes and current matching limitations.
 
 ```ts
 // astro.config.ts

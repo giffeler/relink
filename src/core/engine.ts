@@ -141,6 +141,7 @@ export class RelinkEngine {
       await this.log("run.completed", {
         durationMs: this.clock() - startedAt,
         enabled: settings.enabled,
+        grokipediaEnabled: settings.grokipediaEnabled,
         processed: state.processed - previousProcessed,
         totalProcessed: state.processed,
         scanPending: state.scan !== null,
@@ -430,17 +431,21 @@ export class RelinkEngine {
       ),
     ];
     switch (result.kind) {
-      case "unverifiable":
+      case "unverifiable": {
         link.unverifiableAttempts++;
-        link.nextCheckAt =
-          result.retryAt ??
+        const backoffAt =
           now +
-            (link.unverifiableAttempts === 1
-              ? 1
-              : link.unverifiableAttempts === 2
-                ? 3
-                : 7) *
-              DAY;
+          (link.unverifiableAttempts === 1
+            ? 1
+            : link.unverifiableAttempts === 2
+              ? 3
+              : 7) *
+            DAY;
+        // Retry-After is a minimum, not permission to poll a persistent block forever.
+        link.nextCheckAt =
+          link.unverifiableAttempts === 1
+            ? (result.retryAt ?? backoffAt)
+            : Math.max(result.retryAt ?? 0, backoffAt);
         link.review = { dueAt: link.nextCheckAt, reason: "unverifiable" };
         if (link.replacement) {
           const replacement = await checker.check(link.replacement.url);
@@ -451,6 +456,7 @@ export class RelinkEngine {
           }
         }
         break;
+      }
       case "healthy": {
         link.unverifiableAttempts = 0;
         link.failures = 0;
@@ -483,19 +489,32 @@ export class RelinkEngine {
         } else if (
           settings.grokipediaEnabled &&
           !link.automaticDisabled &&
-          !link.grokipediaChecked
+          /^[a-z-]+\.(?:m\.)?wikipedia\.org$/u.test(link.host)
         ) {
           const provider =
             this.dependencies.encyclopedia ??
             new GrokipediaProvider(checker, this.clock);
           const discovery = await provider.discover(link, fragments);
+          // Reconsider past rejections on the normal healthy-link schedule.
+          // Articles and provider markup can change after an inconclusive match.
           link.grokipediaChecked = discovery.kind !== "unavailable";
+          await this.log("grokipedia.discovery", {
+            linkId: link.id,
+            host: link.host,
+            result: discovery.kind,
+            reason: discovery.reason ?? null,
+          });
           if (discovery.kind === "found") {
             link.replacement = discovery.replacement;
             link.review = null;
             event = "grokipedia-applied";
           } else if (discovery.kind === "ambiguous")
             link.review = { dueAt: now, reason: "grokipedia-ambiguous" };
+          else if (
+            link.review?.reason === "grokipedia-ambiguous" ||
+            link.review?.reason === "unverifiable"
+          )
+            link.review = null;
         } else if (link.review?.reason === "unverifiable") link.review = null;
         break;
       }

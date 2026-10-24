@@ -1,5 +1,5 @@
 import type { PluginAdminConfig } from "emdash";
-export const VERSION = "0.2.6";
+export const VERSION = "0.2.7";
 export const adminConfiguration = {
   entry: "emdash-plugin-relink/admin",
   pages: [{ path: "/", label: "Relink", icon: "link" }],

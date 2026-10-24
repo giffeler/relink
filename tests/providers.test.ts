@@ -154,6 +154,53 @@ describe("Grokipedia matching", () => {
     };
     return new GrokipediaProvider(checker, () => NOW).discover(link, fragments);
   }
+  it("extracts visible Grokipedia TTS paragraphs without treating UI or scripts as evidence", async () => {
+    const source = html("Example article", "en", original);
+    const spans = html("Example article", "en", target)
+      .replace("<p>", '<div class="article-body"><span data-tts-block="true">')
+      .replace("</p>", "</span></div>");
+    expect(await discover(source, spans)).toMatchObject({ kind: "found" });
+    expect(pageEvidence(spans, target).introduction).toBe(
+      pageEvidence(source, original).introduction,
+    );
+    const outside = spans.replace(
+      'class="article-body"',
+      'class="unrelated-ui"',
+    );
+    expect(await discover(source, outside)).toMatchObject({
+      kind: "ambiguous",
+      reason: "target-evidence-missing",
+    });
+    const scriptOnly = spans
+      .replace('<span data-tts-block="true">', "<script>")
+      .replace("</span>", "</script>");
+    expect(await discover(source, scriptOnly)).toMatchObject({
+      kind: "ambiguous",
+      reason: "target-evidence-missing",
+    });
+  });
+  it.each([
+    [404, "missing", "target-not-found"],
+    [503, "unavailable", "target-unavailable"],
+    [403, "unavailable", "target-unavailable"],
+  ])("reports target status %i accurately", async (status, kind, reason) => {
+    const checker = new LinkChecker(
+      { fetch: async () => response(status) },
+      defaultSettings,
+    );
+    const link = newLink("wiki", original, NOW);
+    link.lastCheck = {
+      kind: "healthy",
+      checkedAt: NOW,
+      finalUrl: original,
+      status: 200,
+      contentType: "text/html",
+      evidence: pageEvidence(html("Example article", "en", original), original),
+    };
+    expect(
+      await new GrokipediaProvider(checker).discover(link, [""]),
+    ).toMatchObject({ kind, reason });
+  });
   it("requires visible article evidence beyond the URL slug", async () => {
     const source = html("Example article", "en", original);
     expect(
@@ -167,7 +214,7 @@ describe("Grokipedia matching", () => {
           "<p>Different</p>",
         ),
       ),
-    ).toEqual({ kind: "ambiguous" });
+    ).toMatchObject({ kind: "ambiguous" });
   });
   it("rejects language mismatch and retains German destinations", async () => {
     const de = "https://de.wikipedia.org/wiki/Example_article";
@@ -178,7 +225,7 @@ describe("Grokipedia matching", () => {
         [""],
         de,
       ),
-    ).toEqual({ kind: "ambiguous" });
+    ).toMatchObject({ kind: "ambiguous" });
     expect(
       await discover(
         html("Example article", "de", de),
@@ -195,10 +242,10 @@ describe("Grokipedia matching", () => {
         html("Example article", "en", target),
         ["#Missing"],
       ),
-    ).toEqual({ kind: "ambiguous" });
+    ).toMatchObject({ kind: "ambiguous" });
     expect(
       await discover(html(), html(), [""], `${original}?oldid=42`),
-    ).toEqual({ kind: "ambiguous" });
+    ).toMatchObject({ kind: "ambiguous" });
     expect(
       await discover(
         html(),
@@ -206,10 +253,10 @@ describe("Grokipedia matching", () => {
         [""],
         "https://de.wikipedia.org/w/index.php?title=Example&oldid=42",
       ),
-    ).toEqual({ kind: "ambiguous" });
+    ).toMatchObject({ kind: "ambiguous" });
     expect(
       await discover(html(), html(), [""], "https://en.wikipedia.org/wiki/%FF"),
-    ).toEqual({ kind: "ambiguous" });
+    ).toMatchObject({ kind: "ambiguous" });
   });
   it("rejects disambiguation and mismatching canonical identities", () => {
     const source = pageEvidence(
