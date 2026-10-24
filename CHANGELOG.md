@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.9 - 2026-10-24
+
+- Reject oversized local scorer responses and timeouts immediately before destroying the HTTP stream. This closes a Node 24 event-order race detected by the cross-version CI matrix; a late response end cannot resolve a rejected request.
+
 ## 0.2.8 - 2026-10-24
 
 - Add optional local CPU semantic matching over a Unix socket, with offline model integrity checks, resource limits and no paid inference fallback.

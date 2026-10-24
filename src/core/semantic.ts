@@ -46,17 +46,20 @@ export class LocalSemanticScorer implements SemanticScorer {
           res.setEncoding("utf8");
           res.on("data", (chunk: string) => {
             text += chunk;
-            if (text.length > 8000)
-              req.destroy(new Error("Invalid scorer response"));
+            if (text.length > 8000) {
+              reject(new Error("Invalid scorer response"));
+              res.destroy();
+              req.destroy();
+            }
           });
           res.on("end", () => resolve(text));
           res.on("error", reject);
         },
       );
-      const timer = setTimeout(
-        () => req.destroy(new Error("Local scorer timeout")),
-        15000,
-      );
+      const timer = setTimeout(() => {
+        reject(new Error("Local scorer timeout"));
+        req.destroy();
+      }, 15000);
       req.on("close", () => clearTimeout(timer));
       req.on("error", reject);
       req.end(body);

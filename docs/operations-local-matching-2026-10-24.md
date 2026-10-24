@@ -50,3 +50,26 @@ A scheduled GPT search for artificial general intelligence was incomplete on the
 The `Artificial_Intelligence` Grokipedia candidate returned HTTP 200 with an empty visible h1 and French body text. Its title metadata alone does not establish valid English article evidence. The final empty-title guard therefore holds the explainable-AI comparison, although its main candidate scores well. The broad `search-unavailable` result covers incomplete candidate retrieval/evidence as well as search-endpoint failures. This is a provider-evidence limitation, not a failed local model invocation, and no automatic rule is forced through it.
 
 The pre-existing host dependency audits still report 20 advisories per site: one critical, six high, nine moderate and four low. They are unchanged from the initial audit and remain separate maintenance; this matching deployment is not a security clearance.
+
+## Complete live result
+
+The regular EmDash jobs evaluated all 24 Wikipedia targets with 0.2.8:
+
+| Final assessment                    | GPT | Space | Total |
+| ----------------------------------- | --: | ----: | ----: |
+| Automatic Grokipedia replacement    |   0 |     7 |     7 |
+| Ambiguous, retained for review      |   3 |     9 |    12 |
+| Incomplete candidate evidence       |   1 |     0 |     1 |
+| No suitable match; suggestion draft |   2 |     2 |     4 |
+
+Every active replacement was checked in a public HTTP 200 article response: all seven new Grokipedia URLs and all nineteen existing archive URLs were present as rendered anchors, and their corresponding original anchor URLs were absent. No manual replacement was inserted to bypass an uncertain automatic decision.
+
+All 27 Wikipedia occurrences (21 Space, six GPT) now have current published paragraph context. An initial background scan populated some entries; a one-time, revision-guarded transaction reconciled the remainder against current published content using the installed extractor. It changed only the occurrence context field and normal storage revision/timestamp metadata, taking 83 ms on Space and 45 ms on GPT. The four missing source URLs were queued for a regular recheck after backfill.
+
+Both SQLite `quick_check` results were `ok`. Hashes of every row in `ec_posts`, `ec_pages` and `revisions` match the pre-deployment backups on both sites. New 0.2.8 run starts/completions reconcile without failures or orphaned completions; each latest discovery reason matches the stored assessment. No local semantic-service failure was observed. Existing blocked or inaccessible external pages and the separately documented dependency advisories remain limitations.
+
+The implementation was committed and pushed as `38f5eb1`; this operational record was completed after the live checks.
+
+## Node 24 response-bound hardening
+
+The first post-push CI matrix exposed an HTTP event-order race not reproduced by the local Node 26 run: destroying an oversized scorer response did not synchronously reject its promise, so a response-end event could win. Relink 0.2.9 rejects oversized responses and timeouts before destroying the streams. The regression test was retained; this was a runtime fix, not a relaxed test. Local type checking, lint, all 132 tests and the build passed again. Production scorer responses did not trigger this condition.
