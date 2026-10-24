@@ -41,7 +41,7 @@ Both sites were built from isolated copies after SQLite/upload/configuration bac
 
 The vendored 0.2.8 archive SHA-256 is `40a5ec78fe3ee1c7dc2f3c5b26b45e147d25bcd9f162258bf1cd9d6e1498807a`. This was not an npm publication. Site commits pushed to `origin/main` are Space `3b697a4` and GPT `065e1d1`. Existing theme and Rose work was preserved and excluded from these commits; the separately staged package/lockfile pairs passed frozen offline validation.
 
-Backups and deployment/doctor/audit logs are under `/var/backups/relink-semantic-20261024/{space,gpt}`. Previous build/dependency trees are under `/var/www/.relink-{space,gpt}-0.2.8-previous`. Temporary build copies were removed after verification. CMS source documents, revisions and uploads were not rewritten.
+Backups and deployment/doctor/audit logs are under `/var/backups/relink-semantic-20261024/{space,gpt}`. Those initial rollback trees were superseded by the final 0.2.9 deployment described below. Temporary build copies were removed after verification. CMS source documents, revisions and uploads were not rewritten.
 
 ## Live provider limitations
 
@@ -64,7 +64,7 @@ The regular EmDash jobs evaluated all 24 Wikipedia targets with 0.2.8:
 
 Every active replacement was checked in a public HTTP 200 article response: all seven new Grokipedia URLs and all nineteen existing archive URLs were present as rendered anchors, and their corresponding original anchor URLs were absent. No manual replacement was inserted to bypass an uncertain automatic decision.
 
-All 27 Wikipedia occurrences (21 Space, six GPT) now have current published paragraph context. An initial background scan populated some entries; a one-time, revision-guarded transaction reconciled the remainder against current published content using the installed extractor. It changed only the occurrence context field and normal storage revision/timestamp metadata, taking 83 ms on Space and 45 ms on GPT. The four missing source URLs were queued for a regular recheck after backfill.
+All 27 Wikipedia occurrences (21 Space, six GPT) now have current published paragraph context. An initial background scan populated some entries; a one-time, revision-guarded transaction reconciled the remainder against current published content using the installed extractor. It changed only the occurrence context field and normal storage revision/timestamp metadata, taking 83 ms on Space and 45 ms on GPT. The four missing source URLs were rechecked by the regular jobs after backfill and still remained ambiguous.
 
 Both SQLite `quick_check` results were `ok`. Hashes of every row in `ec_posts`, `ec_pages` and `revisions` match the pre-deployment backups on both sites. New 0.2.8 run starts/completions reconcile without failures or orphaned completions; each latest discovery reason matches the stored assessment. No local semantic-service failure was observed. Existing blocked or inaccessible external pages and the separately documented dependency advisories remain limitations.
 
@@ -73,3 +73,9 @@ The implementation was committed and pushed as `38f5eb1`; this operational recor
 ## Node 24 response-bound hardening
 
 The first post-push CI matrix exposed an HTTP event-order race not reproduced by the local Node 26 run: destroying an oversized scorer response did not synchronously reject its promise, so a response-end event could win. Relink 0.2.9 rejects oversized responses and timeouts before destroying the streams. The regression test was retained; this was a runtime fix, not a relaxed test. Local type checking, lint, all 132 tests and the build passed again. Production scorer responses did not trigger this condition.
+
+The corrected implementation commit `0cd6453` passed all five [CI compatibility jobs](https://github.com/giffeler/relink/actions/runs/40117184619), including the installed-package, 12 browser tests and Cloudflare build on the 0.42 baseline. The final deployed version on both production hosts is **0.2.9**, with archive SHA-256 `7cbb3ee03df08e8c0e74abb4af0231137a75f07232a516b2467e46b06690e021`. Space deployment commit `9a31a51` and GPT deployment commit `a6a63e6` were pushed. Their isolated builds, type checks, installed-package checks, frozen staged-lockfile checks, peer checks, migration checks and doctor checks passed again. Existing unrelated changes remain unstaged.
+
+Both 0.2.9 workers completed model-backed checks through the local socket: Space reconfirmed SpaceX Merlin; GPT retained the ambiguous artificial-general-intelligence source. All seven Grokipedia and nineteen archive outputs passed public HTML verification again. The final live counts above are unchanged. Both web services and the semantic service are active.
+
+Final deployment backups/logs are under `/var/backups/relink-semantic-0.2.9-20261024/{space,gpt}`. The retained previous 0.2.8 binary/configuration/dependency trees are under `/var/www/.relink-{space,gpt}-0.2.9-previous`. Older task-created binary rollback directories and temporary build copies were removed to recover disk headroom; SQLite/upload/configuration backups remain. `/var/www` had approximately 3.5 GiB free after cleanup. The 0.2.9 audits still report the same 20 advisories per site.
